@@ -19,15 +19,16 @@ package external
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/maps"
-	"github.com/rulego/rulego/utils/str"
-	"strings"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/maps"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
-//注册节点
+// 注册节点
 func init() {
 	Registry.Add(&DbClientNode{})
 }
@@ -38,6 +39,7 @@ const (
 	DELETE = "DELETE"
 	UPDATE = "UPDATE"
 )
+
 const (
 	rowsAffectedKey = "rowsAffected"
 	lastInsertIdKey = "lastInsertId"
@@ -60,12 +62,12 @@ type DbClientNodeConfiguration struct {
 }
 
 type DbClientNode struct {
-	//节点配置
+	// 节点配置
 	Config DbClientNodeConfiguration
 	db     *sql.DB
-	//操作类型 SELECT\UPDATE\INSERT\DELETE
+	// 操作类型 SELECT\UPDATE\INSERT\DELETE
 	opType string
-	//参数是否有变量
+	// 参数是否有变量
 	paramsHasVar bool
 }
 
@@ -93,7 +95,7 @@ func (x *DbClientNode) Init(ruleConfig types.Config, configuration types.Configu
 			words := strings.Fields(x.Config.Sql)
 			// opType = SELECT\UPDATE\INSERT\DELETE
 			x.opType = strings.ToUpper(words[0])
-			//检查操作类型是否支持
+			// 检查操作类型是否支持
 			switch x.opType {
 			case SELECT, UPDATE, INSERT, DELETE:
 				// do nothing
@@ -101,7 +103,7 @@ func (x *DbClientNode) Init(ruleConfig types.Config, configuration types.Configu
 				err = fmt.Errorf("unsupported sql statement: %s", x.Config.Sql)
 			}
 
-			//检查是参数否有变量
+			// 检查是参数否有变量
 			for _, item := range x.Config.Params {
 				if v, ok := item.(string); ok && str.CheckHasVar(v) {
 					x.paramsHasVar = true
@@ -109,7 +111,7 @@ func (x *DbClientNode) Init(ruleConfig types.Config, configuration types.Configu
 				}
 			}
 
-			//检查是否需要转换成$1风格占位符
+			// 检查是否需要转换成$1风格占位符
 			x.Config.Sql = str.ConvertDollarPlaceholder(x.Config.Sql, x.Config.DbType)
 		}
 	}
@@ -126,7 +128,7 @@ func (x *DbClientNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 
 	var params []interface{}
 	if x.paramsHasVar {
-		//转换参数变量
+		// 转换参数变量
 		for _, item := range x.Config.Params {
 			if v, ok := item.(string); ok {
 				params = append(params, str.SprintfDict(v, msg.Metadata.Values()))
@@ -232,7 +234,6 @@ func (x *DbClientNode) query(sqlStr string, params []interface{}, getOne bool) (
 	} else {
 		return result, nil // 否则返回slice类型
 	}
-
 }
 
 // update 修改数据并返回影响行数

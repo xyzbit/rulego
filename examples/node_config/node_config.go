@@ -18,17 +18,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//测试使用占位符替换配置
+// 测试使用占位符替换配置
 func main() {
-
 	config := rulego.NewConfig()
-	//设置全局属性参数，通过${global.transformJs} 方式替换内容
-	//节点初始化时候替换,只替换一次
+	// 设置全局属性参数，通过${global.transformJs} 方式替换内容
+	// 节点初始化时候替换,只替换一次
 	config.Properties.PutValue("transformJs", `
 		var value=global.globalValue;
 		msg['addField2']=value;
@@ -36,10 +36,10 @@ func main() {
 		msgType=handleMsg(msg,metadata,msgType);
 		return {'msg':msg,'metadata':metadata,'msgType':msgType};
 	`)
-	//在js脚本运行时获取全局变量：global.xx
+	// 在js脚本运行时获取全局变量：global.xx
 	config.Properties.PutValue("globalValue", "addValueFromConfig")
 
-	//注册自定义函数
+	// 注册自定义函数
 	config.RegisterUdf("add", func(a, b int) int {
 		return a + b
 	})
@@ -49,13 +49,13 @@ func main() {
 		msg["hasAaRuleChain"] = ok
 		return "returnFromGoMsgType"
 	})
-	//元数据
+	// 元数据
 	metaData := types.NewMetadata()
-	//通过${url}替换内容
-	//运行时替换
+	// 通过${url}替换内容
+	// 运行时替换
 	metaData.PutValue("postUrl", "http://127.0.0.1:8080/api/msg")
 
-	//处理数据
+	// 处理数据
 	ruleEngine, err := rulego.New("rule01", []byte(chainJsonFile), rulego.WithConfig(config))
 	if err != nil {
 		panic(err)
@@ -63,20 +63,20 @@ func main() {
 
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsgWithOptions(msg, types.WithEndFunc(func(msg types.RuleMsg, err error) {
-		//得到规则链处理结果
+		// 得到规则链处理结果
 		fmt.Println("第一次执行", msg, err)
 	}))
 
 	time.Sleep(time.Second * 5)
-	//第二次执行
-	//元数据
+	// 第二次执行
+	// 元数据
 	metaData = types.NewMetadata()
-	//通过${url}替换内容
-	//运行时替换
+	// 通过${url}替换内容
+	// 运行时替换
 	metaData.PutValue("postUrl", "http://127.0.0.1:8080/api/msg2")
 	msg = types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":42}")
 	ruleEngine.OnMsgWithOptions(msg, types.WithEndFunc(func(msg types.RuleMsg, err error) {
-		//得到规则链处理结果
+		// 得到规则链处理结果
 		fmt.Println("第二次执行", msg, err)
 	}))
 	time.Sleep(time.Second * 30)

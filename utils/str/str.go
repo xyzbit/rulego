@@ -18,40 +18,43 @@ package str
 
 import (
 	"fmt"
-	"github.com/rulego/rulego/utils/json"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xyzbit/rulego/utils/json"
 )
 
-const varPatternLeft = "${"
-const varPatternRight = "}"
+const (
+	varPatternLeft  = "${"
+	varPatternRight = "}"
+)
 
 func init() {
-	//设置随机种子
+	// 设置随机种子
 	rand.Seed(time.Now().UnixNano())
 }
 
-//SprintfDict 根据pattern和dict格式化字符串。
-//pattern是一个字符串，包含${key}形式的变量占位符。
-//dict map[string]string 被替换的变量。
-//例如，SprintfDict（“你好，$｛name｝！”，map[string]string｛“name”：“Alice”｝）返回“你好，Alice！”。
-//如果pattern包含一个不在dict中的key，它将保持不变。
-//如果dict包含一个不在pattern中的key，它将被忽略。
+// SprintfDict 根据pattern和dict格式化字符串。
+// pattern是一个字符串，包含${key}形式的变量占位符。
+// dict map[string]string 被替换的变量。
+// 例如，SprintfDict（“你好，$｛name｝！”，map[string]string｛“name”：“Alice”｝）返回“你好，Alice！”。
+// 如果pattern包含一个不在dict中的key，它将保持不变。
+// 如果dict包含一个不在pattern中的key，它将被忽略。
 func SprintfDict(pattern string, dict map[string]string) string {
 	return SprintfVar(pattern, "", dict)
 }
 
-//SprintfVar 根据pattern和dict格式化字符串。
-//pattern是一个字符串，包含${key}形式的变量占位符。
-//dict map[string]string 被替换的变量。
-//keyPrefix key前缀，dict所有key将会加上前缀keyPrefix再进行替换。
-//例如，SprintfDict（“你好，$｛name｝！”，map[string]string｛“name”：“Alice”｝）返回“你好，Alice！”。
-//如果pattern包含一个不在dict中的key，它将保持不变。
-//如果dict包含一个不在pattern中的key，它将被忽略。
+// SprintfVar 根据pattern和dict格式化字符串。
+// pattern是一个字符串，包含${key}形式的变量占位符。
+// dict map[string]string 被替换的变量。
+// keyPrefix key前缀，dict所有key将会加上前缀keyPrefix再进行替换。
+// 例如，SprintfDict（“你好，$｛name｝！”，map[string]string｛“name”：“Alice”｝）返回“你好，Alice！”。
+// 如果pattern包含一个不在dict中的key，它将保持不变。
+// 如果dict包含一个不在pattern中的key，它将被忽略。
 func SprintfVar(pattern string, keyPrefix string, dict map[string]string) string {
-	var result = pattern
+	result := pattern
 	for key, value := range dict {
 		result = ProcessVar(result, keyPrefix+key, value)
 	}
@@ -63,10 +66,12 @@ func ProcessVar(pattern, key, val string) string {
 	return strings.Replace(pattern, varPattern, val, -1)
 }
 
-const randomStrOptions = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-const randomStrOptionsLen = len(randomStrOptions)
+const (
+	randomStrOptions    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	randomStrOptionsLen = len(randomStrOptions)
+)
 
-//RandomStr 创建指定长度的随机字符
+// RandomStr 创建指定长度的随机字符
 func RandomStr(num int) string {
 	var builder strings.Builder
 	for i := 0; i < num; i++ {
@@ -126,9 +131,9 @@ func ToString(input interface{}) string {
 	}
 }
 
-//ToStringMapString 把interface类型 转 map[string]string类型
+// ToStringMapString 把interface类型 转 map[string]string类型
 func ToStringMapString(input interface{}) map[string]string {
-	var output = map[string]string{}
+	output := map[string]string{}
 
 	switch v := input.(type) {
 	case map[string]string:
@@ -156,12 +161,12 @@ func ToStringMapString(input interface{}) map[string]string {
 	}
 }
 
-//CheckHasVar 检查字符串是否有占位符
+// CheckHasVar 检查字符串是否有占位符
 func CheckHasVar(str string) bool {
 	return strings.Contains(str, "${") && strings.Contains(str, "}")
 }
 
-//ConvertDollarPlaceholder 转postgres风格占位符
+// ConvertDollarPlaceholder 转postgres风格占位符
 func ConvertDollarPlaceholder(sql, dbType string) string {
 	if dbType == "postgres" {
 		n := 1
@@ -173,7 +178,7 @@ func ConvertDollarPlaceholder(sql, dbType string) string {
 	return sql
 }
 
-//RemoveBraces A function that takes a string with ${} and returns a string without them
+// RemoveBraces A function that takes a string with ${} and returns a string without them
 func RemoveBraces(s string) string {
 	// Create a new empty string
 	result := ""

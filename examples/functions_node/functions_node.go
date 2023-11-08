@@ -18,15 +18,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/action"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/action"
 )
 
 var ruleEngine *rulego.RuleEngine
 
-//初始化自定义函数、规则引擎实例和配置
+// 初始化自定义函数、规则引擎实例和配置
 func init() {
 	action.Functions.Register("add", func(ctx types.RuleContext, msg types.RuleMsg) {
 		ctx.TellSuccess(msg)
@@ -37,7 +38,6 @@ func init() {
 		} else {
 			ctx.TellNext(msg, types.False)
 		}
-
 	})
 	action.Functions.Register("handleMsg", func(ctx types.RuleContext, msg types.RuleMsg) {
 		msg.Data = "{\"handleMsgAdd\":\"handleMsgAddValue\"}"
@@ -55,17 +55,16 @@ func init() {
 	}
 }
 
-//测试使用占位符替换配置
+// 测试使用占位符替换配置
 func main() {
-
-	//元数据
+	// 元数据
 	metaData := types.NewMetadata()
 	metaData.PutValue("postUrl", "http://127.0.0.1:8080/api/msg")
 
-	//处理数据
+	// 处理数据
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsgWithOptions(msg, types.WithEndFunc(func(msg types.RuleMsg, err error) {
-		//得到规则链处理结果
+		// 得到规则链处理结果
 		fmt.Println("执行结果", msg, err)
 	}))
 

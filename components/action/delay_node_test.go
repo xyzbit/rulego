@@ -17,17 +17,18 @@
 package action
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestDelayNodeOnMsg(t *testing.T) {
 	var node DelayNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["periodInSeconds"] = 1
 	configuration["maxPendingMsgs"] = 1
 	config := types.NewConfig()
@@ -44,33 +45,31 @@ func TestDelayNodeOnMsg(t *testing.T) {
 		} else {
 			assert.Equal(t, types.Success, relationType)
 		}
-
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
 	metaData.PutValue("productType", "test")
 
-	//第1条消息
+	// 第1条消息
 	msg := ctx.NewMsg("ACTIVITY_EVENT", metaData, "AA")
 	_ = node.OnMsg(ctx, msg)
 
 	time.Sleep(time.Millisecond * 200)
-	//第2条消息，因为队列已经满，报错
+	// 第2条消息，因为队列已经满，报错
 	msg = ctx.NewMsg("ACTIVITY_EVENT", metaData, "BB")
 	_ = node.OnMsg(ctx, msg)
 
 	time.Sleep(time.Second * 1)
 
-	//第3条消息，因为队列已经消费，成功
+	// 第3条消息，因为队列已经消费，成功
 	msg = ctx.NewMsg("ACTIVITY_EVENT", metaData, "CC")
 	_ = node.OnMsg(ctx, msg)
 
 	time.Sleep(time.Second * 1)
-
 }
 
 func TestDelayNodeByPattern(t *testing.T) {
 	var node DelayNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["PeriodInSecondsPattern"] = "${period}"
 	configuration["maxPendingMsgs"] = 1
 	config := types.NewConfig()

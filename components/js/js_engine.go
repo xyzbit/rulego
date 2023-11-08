@@ -19,52 +19,53 @@ package js
 import (
 	"errors"
 	"fmt"
-	"github.com/dop251/goja"
-	"github.com/rulego/rulego/api/types"
 	"sync"
 	"time"
+
+	"github.com/dop251/goja"
+	"github.com/xyzbit/rulego/api/types"
 )
 
 func closeStateChan(state chan int) {
 	// 超过时间也会执行到这里
-	//如果没有超过时间，那么取出的是0，否则取出的是2
+	// 如果没有超过时间，那么取出的是0，否则取出的是2
 	if <-state == 0 {
 		state <- 1
 	}
 	close(state)
 }
 
-//GojaJsEngine goja js引擎
+// GojaJsEngine goja js引擎
 type GojaJsEngine struct {
 	vmPool   sync.Pool
 	jsScript string
 	config   types.Config
 }
 
-//NewGojaJsEngine 创建一个新的js引擎实例
+// NewGojaJsEngine 创建一个新的js引擎实例
 func NewGojaJsEngine(config types.Config, jsScript string, vars map[string]interface{}) *GojaJsEngine {
-	//defaultAntsPool, _ := ants.NewPool(config.MaxTaskPool)
+	// defaultAntsPool, _ := ants.NewPool(config.MaxTaskPool)
 	jsEngine := &GojaJsEngine{
 		vmPool: sync.Pool{
 			New: func() interface{} {
-				//atomic.AddInt64(&vmNum, 1)
-				//config.Logger.Printf("create new js vm%d", vmNum)
+				// atomic.AddInt64(&vmNum, 1)
+				// config.Logger.Printf("create new js vm%d", vmNum)
 				vm := goja.New()
 				if vars == nil {
 					vars = make(map[string]interface{})
 				}
 				if len(config.Properties.Values()) != 0 {
-					//增加全局Properties 到js运行时
+					// 增加全局Properties 到js运行时
 					vars["global"] = config.Properties.Values()
 				}
-				//增加全局自定义函数到js运行时
+				// 增加全局自定义函数到js运行时
 				for k, v := range config.Udf {
 					vars[k] = vm.ToValue(v)
 				}
 				for k, v := range vars {
 					if err := vm.Set(k, v); err != nil {
 						config.Logger.Printf("set variable error,err:" + err.Error())
-						//return nil, errors.New("set variable error,err:" + err.Error())
+						// return nil, errors.New("set variable error,err:" + err.Error())
 						panic(errors.New("set variable error,err:" + err.Error()))
 					}
 				}
@@ -83,7 +84,7 @@ func NewGojaJsEngine(config types.Config, jsScript string, vars map[string]inter
 				closeStateChan(state)
 
 				if err != nil {
-					//return nil, errors.New("js vm error,err:" + err.Error())
+					// return nil, errors.New("js vm error,err:" + err.Error())
 					config.Logger.Printf("js vm error,err:" + err.Error())
 					panic(errors.New("js vm error,err:" + err.Error()))
 				}
@@ -127,7 +128,7 @@ func (g *GojaJsEngine) Execute(functionName string, argumentList ...interface{})
 
 	// 超过时间也会执行到这里，如果没有超过时间，那么取出的是0，否则取出的是2
 	closeStateChan(state)
-	//放回对象池
+	// 放回对象池
 	g.vmPool.Put(vm)
 	if err != nil {
 		return nil, err

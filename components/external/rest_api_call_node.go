@@ -16,7 +16,7 @@
 
 package external
 
-//规则链节点配置示例：
+// 规则链节点配置示例：
 // {
 //        "id": "s3",
 //        "type": "restApiCall",
@@ -32,70 +32,71 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/maps"
-	"github.com/rulego/rulego/utils/str"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/maps"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 func init() {
 	Registry.Add(&RestApiCallNode{})
 }
 
-//存在到metadata key
+// 存在到metadata key
 const (
-	//http响应状态
+	// http响应状态
 	status = "status"
-	//http响应状态码
+	// http响应状态码
 	statusCode = "statusCode"
-	//http响应错误信息
+	// http响应错误信息
 	errorBody = "errorBody"
 )
 
-//RestApiCallNodeConfiguration rest配置
+// RestApiCallNodeConfiguration rest配置
 type RestApiCallNodeConfiguration struct {
-	//RestEndpointUrlPattern HTTP URL地址目标,可以使用 ${metaKeyName} 替换元数据中的变量
+	// RestEndpointUrlPattern HTTP URL地址目标,可以使用 ${metaKeyName} 替换元数据中的变量
 	RestEndpointUrlPattern string
-	//RequestMethod 请求方法
+	// RequestMethod 请求方法
 	RequestMethod string
-	//Headers 请求头,可以使用 ${metaKeyName} 替换元数据中的变量
+	// Headers 请求头,可以使用 ${metaKeyName} 替换元数据中的变量
 	Headers map[string]string
-	//ReadTimeoutMs 超时，单位毫秒
+	// ReadTimeoutMs 超时，单位毫秒
 	ReadTimeoutMs int
-	//MaxParallelRequestsCount 连接池大小，默认200
+	// MaxParallelRequestsCount 连接池大小，默认200
 	MaxParallelRequestsCount int
-	//EnableProxy 是否开启代理
+	// EnableProxy 是否开启代理
 	EnableProxy bool
-	//UseSystemProxyProperties 使用系统配置代理
+	// UseSystemProxyProperties 使用系统配置代理
 	UseSystemProxyProperties bool
-	//ProxyHost 代理主机
+	// ProxyHost 代理主机
 	ProxyHost string
-	//ProxyPort 代理端口
+	// ProxyPort 代理端口
 	ProxyPort int
-	//ProxyUser 代理用户名
+	// ProxyUser 代理用户名
 	ProxyUser string
-	//ProxyPassword 代理密码
+	// ProxyPassword 代理密码
 	ProxyPassword string
-	//ProxyScheme
+	// ProxyScheme
 	ProxyScheme string
 }
 
-//RestApiCallNode 将通过REST API调用<code> GET | POST | PUT | DELETE </ code>到外部REST服务。
-//如果请求成功，把HTTP响应消息发送到`Success`链, 否则发到`Failure`链，
-//metaData.status记录响应错误码和metaData.errorBody记录错误信息。
+// RestApiCallNode 将通过REST API调用<code> GET | POST | PUT | DELETE </ code>到外部REST服务。
+// 如果请求成功，把HTTP响应消息发送到`Success`链, 否则发到`Failure`链，
+// metaData.status记录响应错误码和metaData.errorBody记录错误信息。
 type RestApiCallNode struct {
-	//节点配置
+	// 节点配置
 	Config RestApiCallNodeConfiguration
-	//httpClient http客户端
+	// httpClient http客户端
 	httpClient *http.Client
 }
 
-//Type 组件类型
+// Type 组件类型
 func (x *RestApiCallNode) Type() string {
 	return "restApiCall"
 }
@@ -111,7 +112,7 @@ func (x *RestApiCallNode) New() types.Node {
 	return &RestApiCallNode{Config: config}
 }
 
-//Init 初始化
+// Init 初始化
 func (x *RestApiCallNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	err := maps.Map2Struct(configuration, &x.Config)
 	if err == nil {
@@ -121,7 +122,7 @@ func (x *RestApiCallNode) Init(ruleConfig types.Config, configuration types.Conf
 	return err
 }
 
-//OnMsg 处理消息
+// OnMsg 处理消息
 func (x *RestApiCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	metaData := msg.Metadata.Values()
 	endpointUrl := str.SprintfDict(x.Config.RestEndpointUrlPattern, metaData)
@@ -129,7 +130,7 @@ func (x *RestApiCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error 
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
-	//设置header
+	// 设置header
 	for key, value := range x.Config.Headers {
 		req.Header.Set(str.SprintfDict(key, metaData), str.SprintfDict(value, metaData))
 	}
@@ -161,7 +162,7 @@ func (x *RestApiCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error 
 	return nil
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (x *RestApiCallNode) Destroy() {
 }
 
@@ -170,7 +171,7 @@ func NewHttpClient(config RestApiCallNodeConfiguration) *http.Client {
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
 	transport.MaxConnsPerHost = config.MaxParallelRequestsCount
 	if config.EnableProxy && !config.UseSystemProxyProperties {
-		//开启代理
+		// 开启代理
 		urli := url.URL{}
 		proxyUrl := fmt.Sprintf("%s://%s:%d", config.ProxyScheme, config.ProxyHost, config.ProxyPort)
 		urlProxy, _ := urli.Parse(proxyUrl)
@@ -179,6 +180,8 @@ func NewHttpClient(config RestApiCallNodeConfiguration) *http.Client {
 		}
 		transport.Proxy = http.ProxyURL(urlProxy)
 	}
-	return &http.Client{Transport: transport,
-		Timeout: time.Duration(config.ReadTimeoutMs) * time.Millisecond}
+	return &http.Client{
+		Transport: transport,
+		Timeout:   time.Duration(config.ReadTimeoutMs) * time.Millisecond,
+	}
 }

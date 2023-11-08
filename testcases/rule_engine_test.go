@@ -19,16 +19,17 @@ package testcases
 import (
 	"context"
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test/assert"
-	"github.com/rulego/rulego/utils/str"
 	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test/assert"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 	addShareValue  = "addShareValue"
 	testdataFolder = "../testdata/"
 )
+
 var ruleChainFile = `
 	{
 	  "ruleChain": {
@@ -79,7 +81,7 @@ var ruleChainFile = `
 	}
 `
 
-//修改metadata和msg 节点
+// 修改metadata和msg 节点
 var modifyMetadataAndMsgNode = `
 	  {
 			"id":"s2",
@@ -92,7 +94,7 @@ var modifyMetadataAndMsgNode = `
 		  }
 `
 
-//加载文件
+// 加载文件
 func loadFile(filePath string) []byte {
 	buf, err := os.ReadFile(testdataFolder + filePath)
 	if err != nil {
@@ -134,7 +136,7 @@ func testRuleEngine(t *testing.T, ruleChainFile string, modifyNodeId, modifyNode
 	maxTimes := 1
 	for j := 0; j < maxTimes; j++ {
 		if modifyNodeId != "" {
-			//modify the node
+			// modify the node
 			ruleEngine.ReloadChild(modifyNodeId, []byte(modifyNodeFile))
 		}
 		ruleEngine.OnMsg(msg)
@@ -150,7 +152,7 @@ func TestRuleChainChangeMetadataAndMsg(t *testing.T) {
 	testRuleEngine(t, ruleChainFile, "s2", modifyMetadataAndMsgNode)
 }
 
-//测试子规则链
+// 测试子规则链
 func TestSubRuleChain(t *testing.T) {
 	start := time.Now()
 	var completed int32
@@ -168,10 +170,10 @@ func TestSubRuleChain(t *testing.T) {
 
 	ruleFile := loadFile("./chain_has_sub_chain.json")
 	subRuleFile := loadFile("./sub_chain.json")
-	//初始化子规则链实例
+	// 初始化子规则链实例
 	_, err := rulego.New("sub_chain_01", subRuleFile, rulego.WithConfig(config))
 
-	//初始化主规则链实例
+	// 初始化主规则链实例
 	ruleEngine, err := rulego.New("rule01", ruleFile, rulego.WithConfig(config))
 	assert.Nil(t, err)
 	defer rulego.Del("rule01")
@@ -181,15 +183,15 @@ func TestSubRuleChain(t *testing.T) {
 		metaData.PutValue("productType", "productType01")
 		msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "aa")
 
-		//处理消息并得到处理结果
+		// 处理消息并得到处理结果
 		ruleEngine.OnMsgWithEndFunc(msg, func(msg types.RuleMsg, err error) {
 			if msg.Type == "TEST_MSG_TYPE1" {
-				//root chain end
+				// root chain end
 				assert.Equal(t, msg.Data, "{\"aa\":11}")
 				v := msg.Metadata.GetValue("test")
 				assert.Equal(t, v, "Modified by root chain")
 			} else {
-				//sub chain end
+				// sub chain end
 				assert.Equal(t, msg.Data, "{\"bb\":22}")
 				v := msg.Metadata.GetValue("test")
 				assert.Equal(t, v, "Modified by sub chain")
@@ -202,7 +204,7 @@ func TestSubRuleChain(t *testing.T) {
 	fmt.Printf("use times:%s \n", time.Since(start))
 }
 
-//测试规则链debug模式
+// 测试规则链debug模式
 func TestRuleChainDebugMode(t *testing.T) {
 	config := rulego.NewConfig()
 	var inTimes int
@@ -226,7 +228,7 @@ func TestRuleChainDebugMode(t *testing.T) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "productType01")
 	msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "aa")
-	//处理消息并得到处理结果
+	// 处理消息并得到处理结果
 	ruleEngine.OnMsg(msg)
 	time.Sleep(time.Second)
 
@@ -242,7 +244,7 @@ func TestRuleChainDebugMode(t *testing.T) {
 
 	inTimes = 0
 	outTimes = 0
-	//处理消息并得到处理结果
+	// 处理消息并得到处理结果
 	ruleEngine.OnMsg(msg)
 	time.Sleep(time.Second)
 
@@ -258,7 +260,7 @@ func TestRuleChainDebugMode(t *testing.T) {
 
 	inTimes = 0
 	outTimes = 0
-	//处理消息并得到处理结果
+	// 处理消息并得到处理结果
 	ruleEngine.OnMsg(msg)
 	time.Sleep(time.Second)
 
@@ -274,7 +276,7 @@ func TestNotDebugModel(t *testing.T) {
 		assert.NotEqual(t, "s2", nodeId)
 	}
 	config.OnEnd = func(msg types.RuleMsg, err error) {
-		//已经被 s2 节点修改消息类型
+		// 已经被 s2 节点修改消息类型
 		assert.Equal(t, "TEST_MSG_TYPE2", msg.Type)
 		assert.Nil(t, err)
 	}
@@ -285,7 +287,7 @@ func TestNotDebugModel(t *testing.T) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 	msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "{\"temperature\":41}")
-	var maxTimes = 1
+	maxTimes := 1
 	var wg sync.WaitGroup
 	wg.Add(maxTimes)
 	for j := 0; j < maxTimes; j++ {
@@ -297,7 +299,7 @@ func TestNotDebugModel(t *testing.T) {
 	fmt.Printf("total massages:%d,use times:%s \n", maxTimes, time.Since(start))
 }
 
-//测试获取节点
+// 测试获取节点
 func TestGetNodeId(t *testing.T) {
 	def, _ := rulego.ParserRuleChain([]byte(ruleChainFile))
 	ctx, err := rulego.InitRuleChainCtx(rulego.NewConfig(), &def)
@@ -312,19 +314,17 @@ func TestGetNodeId(t *testing.T) {
 	nodeCtx, ok = ctx.GetNodeById(types.RuleNodeId{Id: "node5", Type: types.NODE})
 	assert.False(t, ok)
 	_ = nodeCtx
-
 }
 
-//测试callRestApi
+// 测试callRestApi
 func TestCallRestApi(t *testing.T) {
-
 	start := time.Now()
 	maxTimes := 100000
 	var group sync.WaitGroup
 	group.Add(maxTimes)
 
-	//wp, _ := ants.NewPool(math.MaxInt32)
-	//使用协程池
+	// wp, _ := ants.NewPool(math.MaxInt32)
+	// 使用协程池
 	config := rulego.NewConfig(types.WithDefaultPool())
 	config.OnDebug = func(flowType string, nodeId string, msg types.RuleMsg, relationType string, err error) {
 		if err != nil {
@@ -352,7 +352,7 @@ func TestCallRestApi(t *testing.T) {
 	fmt.Printf("total massages:%d,use times:%s \n", maxTimes, time.Since(start))
 }
 
-//测试消息路由
+// 测试消息路由
 func TestMsgTypeSwitch(t *testing.T) {
 	var wg sync.WaitGroup
 
@@ -367,19 +367,19 @@ func TestMsgTypeSwitch(t *testing.T) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 
-	//TEST_MSG_TYPE1 找到2条chains,4个nodes
+	// TEST_MSG_TYPE1 找到2条chains,4个nodes
 	wg.Add(6)
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
 	wg.Wait()
 
-	//TEST_MSG_TYPE2 找到1条chain,2个nodes
+	// TEST_MSG_TYPE2 找到1条chain,2个nodes
 	wg.Add(4)
 	msg = types.NewMsg(0, "TEST_MSG_TYPE2", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
 	wg.Wait()
 
-	//TEST_MSG_TYPE3 找到0条chain,1个node
+	// TEST_MSG_TYPE3 找到0条chain,1个node
 	wg.Add(2)
 	msg = types.NewMsg(0, "TEST_MSG_TYPE3", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
@@ -387,7 +387,7 @@ func TestMsgTypeSwitch(t *testing.T) {
 }
 
 func TestWithContext(t *testing.T) {
-	//注册自定义组件
+	// 注册自定义组件
 	rulego.Registry.Register(&UpperNode{})
 	rulego.Registry.Register(&TimeNode{})
 
@@ -395,8 +395,8 @@ func TestWithContext(t *testing.T) {
 	config := rulego.NewConfig()
 	config.OnEnd = func(msg types.RuleMsg, err error) {
 		assert.Equal(t, "TEST_MSG_TYPE", msg.Type)
-		//v1, _ := msg.Metadata.GetValue(shareKey)
-		//assert.Equal(t, shareValue, v1)
+		// v1, _ := msg.Metadata.GetValue(shareKey)
+		// assert.Equal(t, shareValue, v1)
 
 		v2 := msg.Metadata.GetValue(addShareKey)
 		assert.Equal(t, addShareValue, v2)
@@ -409,7 +409,7 @@ func TestWithContext(t *testing.T) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 	msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "{\"temperature\":41}")
-	var maxTimes = 1000
+	maxTimes := 1000
 	var wg sync.WaitGroup
 	wg.Add(maxTimes)
 	for j := 0; j < maxTimes; j++ {
@@ -421,7 +421,6 @@ func TestWithContext(t *testing.T) {
 				assert.Equal(t, shareValue+strconv.Itoa(index), v1)
 			}))
 		}()
-
 	}
 	wg.Wait()
 	fmt.Printf("total massages:%d,use times:%s \n", maxTimes, time.Since(start))
@@ -442,9 +441,9 @@ func TestSpecifyID(t *testing.T) {
 	assert.Equal(t, true, ok)
 }
 
-//TestLoadChain 测试加载规则链文件夹
+// TestLoadChain 测试加载规则链文件夹
 func TestLoadChain(t *testing.T) {
-	//注册自定义组件
+	// 注册自定义组件
 	rulego.Registry.Register(&UpperNode{})
 	rulego.Registry.Register(&TimeNode{})
 
@@ -473,16 +472,15 @@ func TestLoadChain(t *testing.T) {
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, types.NewMetadata(), "{\"temperature\":41}")
 
 	rulego.OnMsg(msg)
-
 }
 
-//TestWait 测试同步执行规则链
+// TestWait 测试同步执行规则链
 func TestWait(t *testing.T) {
 	var wg sync.WaitGroup
 
 	config := rulego.NewConfig()
 	config.OnDebug = func(flowType string, nodeId string, msg types.RuleMsg, relationType string, err error) {
-		//fmt.Println(flowType, nodeId)
+		// fmt.Println(flowType, nodeId)
 		wg.Done()
 	}
 	ruleEngine, err := rulego.New(str.RandomStr(10), loadFile("./test_wait.json"), rulego.WithConfig(config))
@@ -496,7 +494,7 @@ func TestWait(t *testing.T) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 
-	//TEST_MSG_TYPE1 找到2条chains,4个nodes
+	// TEST_MSG_TYPE1 找到2条chains,4个nodes
 	wg.Add(8)
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":41}")
 	var count int32
@@ -506,7 +504,7 @@ func TestWait(t *testing.T) {
 	assert.Equal(t, int32(2), count)
 	wg.Wait()
 
-	//TEST_MSG_TYPE2 找到1条chain,2个nodes
+	// TEST_MSG_TYPE2 找到1条chain,2个nodes
 	wg.Add(4)
 	count = 0
 	msg = types.NewMsg(0, "TEST_MSG_TYPE2", types.JSON, metaData, "{\"temperature\":41}")
@@ -517,7 +515,7 @@ func TestWait(t *testing.T) {
 	assert.Equal(t, int32(1), count)
 	wg.Wait()
 
-	//TEST_MSG_TYPE3 找到0条chain,1个node
+	// TEST_MSG_TYPE3 找到0条chain,1个node
 	wg.Add(2)
 	count = 0
 	msg = types.NewMsg(0, "TEST_MSG_TYPE3", types.JSON, metaData, "{\"temperature\":41}")

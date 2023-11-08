@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test/assert"
-	string2 "github.com/rulego/rulego/utils/str"
 	"sync"
 	"testing"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test/assert"
+	string2 "github.com/xyzbit/rulego/utils/str"
 )
 
 var testPluginRuleFile = `
@@ -70,7 +71,7 @@ func TestPlugin(t *testing.T) {
 			metaData := types.BuildMetadata(make(map[string]string))
 			metaData.PutValue("productType", "test01")
 			msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "aa")
-			//time.Sleep(time.Millisecond * 50)
+			// time.Sleep(time.Millisecond * 50)
 			ruleEngine.OnMsg(msg)
 		}
 	}
@@ -112,7 +113,7 @@ func TestReloadPlugin(t *testing.T) {
 			metaData := types.BuildMetadata(make(map[string]string))
 			metaData.PutValue("productType", "test01")
 			msg := types.NewMsg(0, "TEST_MSG_TYPE", types.JSON, metaData, "aa")
-			//time.Sleep(time.Millisecond * 50)
+			// time.Sleep(time.Millisecond * 50)
 			ruleEngine.OnMsg(msg)
 
 		}

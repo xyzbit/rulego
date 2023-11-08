@@ -17,17 +17,17 @@
 package main
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//测试数据库操作组件dbClient
-//dbClient支持对数据库的增、删、修改、查
-//dbClient组件查询的数据可以继续使用其它组件对数据进行处理，
-//例如：使用`jsTransform`组件对数据进行处理、把从数据库查询数据通过`restApiCall`组件和其他系统集成
+// 测试数据库操作组件dbClient
+// dbClient支持对数据库的增、删、修改、查
+// dbClient组件查询的数据可以继续使用其它组件对数据进行处理，
+// 例如：使用`jsTransform`组件对数据进行处理、把从数据库查询数据通过`restApiCall`组件和其他系统集成
 func main() {
-
 	config := rulego.NewConfig()
 	config.OnDebug = func(flowType string, nodeId string, msg types.RuleMsg, relationType string, err error) {
 		config.Logger.Printf("flowType=%s,nodeId=%s,msgType=%s,data=%s,metaData=%s,relationType=%s,err=%s", flowType, nodeId, msg.Type, msg.Data, msg.Metadata, relationType, err)
@@ -39,7 +39,7 @@ func main() {
 	metaData.PutValue("name", "test01")
 	metaData.PutValue("updateAge", "21")
 
-	//加载规则链
+	// 加载规则链
 	ruleEngine, err := rulego.New("rule01", []byte(chainJsonFile), rulego.WithConfig(config))
 	if err != nil {
 		panic(err)

@@ -17,15 +17,16 @@
 package transform
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestJsTransformNodeOnMsg(t *testing.T) {
 	var node JsTransformNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["jsScript"] = `
 		metadata['test']='test02';
 		metadata['index']=52;
@@ -50,5 +51,4 @@ func TestJsTransformNodeOnMsg(t *testing.T) {
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
-
 }

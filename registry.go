@@ -19,23 +19,24 @@ package rulego
 import (
 	"errors"
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/action"
-	"github.com/rulego/rulego/components/external"
-	"github.com/rulego/rulego/components/filter"
-	"github.com/rulego/rulego/components/transform"
-	"github.com/rulego/rulego/utils/reflect"
 	"plugin"
 	"sync"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/action"
+	"github.com/xyzbit/rulego/components/external"
+	"github.com/xyzbit/rulego/components/filter"
+	"github.com/xyzbit/rulego/components/transform"
+	"github.com/xyzbit/rulego/utils/reflect"
 )
 
-//PluginsSymbol 插件检查点 Symbol
+// PluginsSymbol 插件检查点 Symbol
 const PluginsSymbol = "Plugins"
 
-//Registry 规则引擎组件默认注册器
+// Registry 规则引擎组件默认注册器
 var Registry = new(RuleComponentRegistry)
 
-//注册默认组件
+// 注册默认组件
 func init() {
 	var components []types.Node
 	components = append(components, action.Registry.Components()...)
@@ -43,22 +44,22 @@ func init() {
 	components = append(components, transform.Registry.Components()...)
 	components = append(components, external.Registry.Components()...)
 
-	//把组件注册到默认组件库
+	// 把组件注册到默认组件库
 	for _, node := range components {
 		_ = Registry.Register(node)
 	}
 }
 
-//RuleComponentRegistry 组件注册器
+// RuleComponentRegistry 组件注册器
 type RuleComponentRegistry struct {
-	//规则引擎节点组件列表
+	// 规则引擎节点组件列表
 	components map[string]types.Node
-	//插件列表
+	// 插件列表
 	plugins map[string][]types.Node
 	sync.RWMutex
 }
 
-//Register 注册规则引擎节点组件
+// Register 注册规则引擎节点组件
 func (r *RuleComponentRegistry) Register(node types.Node) error {
 	r.Lock()
 	defer r.Unlock()
@@ -73,7 +74,7 @@ func (r *RuleComponentRegistry) Register(node types.Node) error {
 	return nil
 }
 
-//RegisterPlugin 注册规则引擎节点组件
+// RegisterPlugin 注册规则引擎节点组件
 func (r *RuleComponentRegistry) RegisterPlugin(name string, file string) error {
 	builder := &PluginComponentRegistry{name: name, file: file}
 	if err := builder.Init(); err != nil {
@@ -103,7 +104,7 @@ func (r *RuleComponentRegistry) RegisterPlugin(name string, file string) error {
 func (r *RuleComponentRegistry) Unregister(componentType string) error {
 	r.RLock()
 	defer r.RUnlock()
-	var removed = false
+	removed := false
 	// Check if the plugin exists
 	if nodes, ok := r.plugins[componentType]; ok {
 		for _, node := range nodes {
@@ -128,7 +129,7 @@ func (r *RuleComponentRegistry) Unregister(componentType string) error {
 	}
 }
 
-//NewNode 获取规则引擎节点组件
+// NewNode 获取规则引擎节点组件
 func (r *RuleComponentRegistry) NewNode(nodeType string) (types.Node, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -143,7 +144,7 @@ func (r *RuleComponentRegistry) NewNode(nodeType string) (types.Node, error) {
 func (r *RuleComponentRegistry) GetComponents() map[string]types.Node {
 	r.RLock()
 	defer r.RUnlock()
-	var components = map[string]types.Node{}
+	components := map[string]types.Node{}
 	for k, v := range r.components {
 		components[k] = v
 	}
@@ -154,14 +155,14 @@ func (r *RuleComponentRegistry) GetComponentForms() types.ComponentFormList {
 	r.RLock()
 	defer r.RUnlock()
 
-	var components = make(types.ComponentFormList)
+	components := make(types.ComponentFormList)
 	for _, component := range r.components {
 		components[component.Type()] = reflect.GetComponentForm(component)
 	}
 	return components
 }
 
-//PluginComponentRegistry go plugin组件初始化器
+// PluginComponentRegistry go plugin组件初始化器
 type PluginComponentRegistry struct {
 	name     string
 	file     string
@@ -202,6 +203,6 @@ func loadPlugin(file string) (types.PluginRegistry, error) {
 		return nil, errors.New("invalid plugin")
 	}
 	// Register the plugin with the name
-	//pm.plugins[name] = plugin
+	// pm.plugins[name] = plugin
 	return plugin, nil
 }

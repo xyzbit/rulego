@@ -17,14 +17,15 @@
 package main
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
 var ruleEngine *rulego.RuleEngine
 
-//初始化规则引擎实例和配置
+// 初始化规则引擎实例和配置
 func init() {
 	config := rulego.NewConfig()
 	var err error
@@ -34,14 +35,13 @@ func init() {
 	}
 }
 
-//测试ssh执行命令或者shell脚本
-//脚本返回结果，会通过msg返回给下一个节点
-//测试前，请配置正确的ssh登录信息
-//count.sh 内容
-//#!/bin/sh
-//echo "The first argument is $1"
+// 测试ssh执行命令或者shell脚本
+// 脚本返回结果，会通过msg返回给下一个节点
+// 测试前，请配置正确的ssh登录信息
+// count.sh 内容
+// #!/bin/sh
+// echo "The first argument is $1"
 func main() {
-
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 

@@ -17,11 +17,12 @@
 package external
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/utils/maps"
 	"sync"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/utils/maps"
 )
 
 func TestSendEmailNode(t *testing.T) {
@@ -42,7 +43,7 @@ func TestSendEmailNode(t *testing.T) {
 		EnableTls: false,
 		Email:     email,
 	}
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 
 	err := maps.Map2Struct(&mailConfig, &configuration)
 	if err != nil {
@@ -56,7 +57,6 @@ func TestSendEmailNode(t *testing.T) {
 	var group sync.WaitGroup
 	group.Add(1)
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
-
 	})
 	ctx.SetEndFunc(func(msg types.RuleMsg, err error) {
 		group.Done()
@@ -72,6 +72,7 @@ func TestSendEmailNode(t *testing.T) {
 	}
 	group.Wait()
 }
+
 func TestSendEmailNodeWithTls(t *testing.T) {
 	var sendEmailNode SendEmailNode
 	node := sendEmailNode.New()
@@ -90,7 +91,7 @@ func TestSendEmailNodeWithTls(t *testing.T) {
 		EnableTls: true,
 		Email:     email,
 	}
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 
 	err := maps.Map2Struct(&mailConfig, &configuration)
 	if err != nil {
@@ -104,7 +105,6 @@ func TestSendEmailNodeWithTls(t *testing.T) {
 	var group sync.WaitGroup
 	group.Add(1)
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
-
 	})
 	ctx.SetEndFunc(func(msg types.RuleMsg, err error) {
 		group.Done()

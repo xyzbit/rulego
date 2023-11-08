@@ -17,15 +17,16 @@
 package filter
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestJsFilterNodeOnMsg(t *testing.T) {
 	var node JsFilterNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["jsScript"] = `
 		//测试注释
 		return msg=='AA';
@@ -42,7 +43,6 @@ func TestJsFilterNodeOnMsg(t *testing.T) {
 		} else if msg.Type == "TEST_MSG_TYPE_BB" {
 			assert.Equal(t, "False", relationType)
 		}
-
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
 	msg := ctx.NewMsg("TEST_MSG_TYPE_AA", metaData, "AA")

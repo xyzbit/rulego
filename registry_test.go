@@ -17,9 +17,10 @@
 package rulego
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestGetComponentsFields(t *testing.T) {
@@ -54,10 +55,8 @@ func TestGetComponentsFields(t *testing.T) {
 	}
 }
 
-//以下是测试组件
-
-type BaseNode struct {
-}
+// 以下是测试组件
+type BaseNode struct{}
 
 func (n *BaseNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	return nil
@@ -70,7 +69,7 @@ func (n *BaseNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 func (n *BaseNode) Destroy() {
 }
 
-//没配置节点
+// 没配置节点
 type NoConfigNode struct {
 	BaseNode
 }
@@ -78,11 +77,12 @@ type NoConfigNode struct {
 func (n *NoConfigNode) Type() string {
 	return "test/noConfig"
 }
+
 func (n *NoConfigNode) New() types.Node {
 	return &NoConfigNode{}
 }
 
-//有指针配置
+// 有指针配置
 type ConfigHasPtrConfig struct {
 	Num *int
 	Url string
@@ -96,11 +96,12 @@ type ConfigHasPtrNode struct {
 func (n *ConfigHasPtrNode) Type() string {
 	return "test/configHasPtr"
 }
+
 func (n *ConfigHasPtrNode) New() types.Node {
 	return &ConfigHasPtrNode{}
 }
 
-//config 大写
+// config 大写
 type ConfigHasPtrNode2 struct {
 	BaseNode
 	Config ConfigHasPtrConfig
@@ -109,11 +110,12 @@ type ConfigHasPtrNode2 struct {
 func (n *ConfigHasPtrNode2) Type() string {
 	return "test/configHasPtr2"
 }
+
 func (n *ConfigHasPtrNode2) New() types.Node {
 	return &ConfigHasPtrNode2{}
 }
 
-//有默认值配置
+// 有默认值配置
 type DefaultValueConfig struct {
 	Num    int
 	Url    string `Label:"服务器地址" Desc:"broker服务器地址" Validate:"required" `

@@ -14,36 +14,43 @@
  * limitations under the License.
  */
 
-package action
+package external
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/xyzbit/rulego/api/types"
 	"github.com/xyzbit/rulego/test"
-	"github.com/xyzbit/rulego/test/assert"
 )
 
-func TestJsTransformNodeOnMsg(t *testing.T) {
-	var node LogNode
+func TestRPCApiCallNodeOnMsg(t *testing.T) {
+	var node RPCCallNode
 	configuration := make(types.Configuration)
-	configuration["jsScript"] = `
-		//测试注释
-		return 'Incoming message:\n' + JSON.stringify(msg) + '\nIncoming metadata:\n' + JSON.stringify(metadata);
-  	`
+	configuration["serviceName"] = "welfare"
+	configuration["method"] = "welfare.v1.Welfare/GetTaskList"
+	configuration["target"] = "127.0.0.1:9098"
 	config := types.NewConfig()
 	err := node.Init(config, configuration)
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
+
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
-		assert.Equal(t, types.Success, relationType)
+		t.Logf("rule context %+v, relationType: %s", msg, relationType)
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
-	metaData.PutValue("productType", "test")
-	msg := ctx.NewMsg("ACTIVITY_EVENT", metaData, "AA")
+	metaData.PutValue("is_login", "true")
+	msg := ctx.NewMsg("TEST_MSG_TYPE_AA", metaData, `{
+		"project": "newmedia_rapidapp",
+		"user_status": {
+			"uid": "481739124807512917",
+			"is_login": ${is_login}
+		}
+	}`)
 	err = node.OnMsg(ctx, msg)
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
+	fmt.Printf("msg.Data = %s", msg.Data)
 }

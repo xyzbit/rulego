@@ -20,35 +20,36 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/maps"
-	string2 "github.com/rulego/rulego/utils/str"
 	"log"
 	"net"
 	"net/smtp"
 	"strings"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/maps"
+	string2 "github.com/xyzbit/rulego/utils/str"
 )
 
-//分隔符
+// 分隔符
 const splitUserSep = ","
 
 func init() {
 	Registry.Add(&SendEmailNode{})
 }
 
-//Email 邮件消息体
+// Email 邮件消息体
 type Email struct {
-	//From 发件人邮箱
+	// From 发件人邮箱
 	From string
-	//To 收件人邮箱，多个与`,`隔开
+	// To 收件人邮箱，多个与`,`隔开
 	To string
-	//Cc 抄送人邮箱，多个与`,`隔开
+	// Cc 抄送人邮箱，多个与`,`隔开
 	Cc string
-	//Bcc 密送人邮箱，多个与`,`隔开
+	// Bcc 密送人邮箱，多个与`,`隔开
 	Bcc string
-	//Subject 邮件主题，可以使用 ${metaKeyName} 替换元数据中的变量
+	// Subject 邮件主题，可以使用 ${metaKeyName} 替换元数据中的变量
 	Subject string
-	//Body 邮件模板，可以使用 ${metaKeyName} 替换元数据中的变量
+	// Body 邮件模板，可以使用 ${metaKeyName} 替换元数据中的变量
 	Body string
 }
 
@@ -83,6 +84,7 @@ func (e *Email) createEmailMsg(metadata map[string]string) ([]byte, []string) {
 		body)
 	return msg, sendTo
 }
+
 func (e *Email) SendEmail(addr string, auth smtp.Auth, metadata map[string]string) error {
 	msg, sendTo := e.createEmailMsg(metadata)
 	// 调用SendMail函数发送邮件
@@ -90,7 +92,6 @@ func (e *Email) SendEmail(addr string, auth smtp.Auth, metadata map[string]strin
 }
 
 func (e *Email) SendEmailWithTls(addr string, auth smtp.Auth, metadata map[string]string) error {
-
 	msg, sendTo := e.createEmailMsg(metadata)
 
 	host, _, _ := net.SplitHostPort(addr)
@@ -144,35 +145,34 @@ func (e *Email) SendEmailWithTls(addr string, auth smtp.Auth, metadata map[strin
 	}
 
 	return c.Quit()
-
 }
 
-//SendEmailConfiguration 配置
+// SendEmailConfiguration 配置
 type SendEmailConfiguration struct {
-	//SmtpHost Smtp主机地址
+	// SmtpHost Smtp主机地址
 	SmtpHost string
-	//SmtpPort Smtp端口
+	// SmtpPort Smtp端口
 	SmtpPort int
-	//Username 用户名
+	// Username 用户名
 	Username string
-	//Password 授权码
+	// Password 授权码
 	Password string
-	//EnableTls 是否是使用tls方式
+	// EnableTls 是否是使用tls方式
 	EnableTls bool
-	//Email 邮件内容配置
+	// Email 邮件内容配置
 	Email Email
 }
 
-//SendEmailNode 通过SMTP服务器发送邮消息
-//如果请求成功，发送消息到`Success`链, 否则发到`Failure`链，
+// SendEmailNode 通过SMTP服务器发送邮消息
+// 如果请求成功，发送消息到`Success`链, 否则发到`Failure`链，
 type SendEmailNode struct {
-	//节点配置
+	// 节点配置
 	Config   SendEmailConfiguration
 	smtpAddr string
 	smtpAuth smtp.Auth
 }
 
-//Type 组件类型
+// Type 组件类型
 func (x *SendEmailNode) Type() string {
 	return "sendEmail"
 }
@@ -181,7 +181,7 @@ func (x *SendEmailNode) New() types.Node {
 	return &SendEmailNode{}
 }
 
-//Init 初始化
+// Init 初始化
 func (x *SendEmailNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	err := maps.Map2Struct(configuration, &x.Config)
 	if err == nil {
@@ -195,7 +195,7 @@ func (x *SendEmailNode) Init(ruleConfig types.Config, configuration types.Config
 	return err
 }
 
-//OnMsg 处理消息
+// OnMsg 处理消息
 func (x *SendEmailNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	metaData := msg.Metadata.Values()
 	emailPojo := x.Config.Email
@@ -214,6 +214,6 @@ func (x *SendEmailNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	return nil
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (x *SendEmailNode) Destroy() {
 }

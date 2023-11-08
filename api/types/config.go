@@ -17,47 +17,48 @@
 package types
 
 import (
-	"github.com/rulego/rulego/pool"
 	"math"
 	"time"
+
+	"github.com/xyzbit/rulego/pool"
 )
 
 // Config 规则引擎配置
 type Config struct {
-	//OnDebug 节点调试信息回调函数，只有节点debugMode=true才会调用
-	//flowType IN/OUT,流入(IN)该组件或者流出(OUT)该组件事件类型
-	//nodeId 节点ID
-	//msg 当前msg
-	//relationType 如果flowType=IN，则代表上一个节点和该节点的连接关系，例如(True/False);如果flowType=OUT，则代表该节点和下一个节点的连接关系，例如(True/False)
-	//err 错误信息
+	// OnDebug 节点调试信息回调函数，只有节点debugMode=true才会调用
+	// flowType IN/OUT,流入(IN)该组件或者流出(OUT)该组件事件类型
+	// nodeId 节点ID
+	// msg 当前msg
+	// relationType 如果flowType=IN，则代表上一个节点和该节点的连接关系，例如(True/False);如果flowType=OUT，则代表该节点和下一个节点的连接关系，例如(True/False)
+	// err 错误信息
 	OnDebug func(flowType string, nodeId string, msg RuleMsg, relationType string, err error)
-	//OnEnd 规则链执行完成回调函数，如果有多个结束点，则执行多次
+	// OnEnd 规则链执行完成回调函数，如果有多个结束点，则执行多次
 	OnEnd func(msg RuleMsg, err error)
-	//JsMaxExecutionTime js脚本执行超时时间，默认2000毫秒
+	// JsMaxExecutionTime js脚本执行超时时间，默认2000毫秒
 	JsMaxExecutionTime time.Duration
-	//Pool 协程池接口
-	//如果不配置，则使用 go func 方式
-	//默认使用`pool.WorkerPool`。兼容ants协程池，可以使用ants协程池实现
-	//例如：
+	// Pool 协程池接口
+	// 如果不配置，则使用 go func 方式
+	// 默认使用`pool.WorkerPool`。兼容ants协程池，可以使用ants协程池实现
+	// 例如：
 	//	pool, _ := ants.NewPool(math.MaxInt32)
 	//	config := rulego.NewConfig(types.WithPool(pool))
 	Pool Pool
-	//ComponentsRegistry 组件库
-	//默认使用`rulego.Registry`
+	// ComponentsRegistry 组件库
+	// 默认使用`rulego.Registry`
 	ComponentsRegistry ComponentRegistry
-	//规则链解析接口，默认使用：`rulego.JsonParser`
+	// 规则链解析接口，默认使用：`rulego.JsonParser`
 	Parser Parser
-	//Logger 日志记录接口，默认使用：`DefaultLogger()`
+	// Logger 日志记录接口，默认使用：`DefaultLogger()`
 	Logger Logger
-	//Properties 全局属性，key-value形式
-	//规则链节点配置可以通过${global.propertyKey}方式替换Properties值
-	//节点初始化时候替换，只替换一次
+	// Properties 全局属性，key-value形式
+	// 规则链节点配置可以通过${global.propertyKey}方式替换Properties值
+	// 节点初始化时候替换，只替换一次
 	Properties Metadata
-	//Udf 注册自定义golang函数，js运行时可以通过x(param1,param2,...) 方式调用
+	// Udf 注册自定义golang函数，js运行时可以通过x(param1,param2,...) 方式调用
 	Udf map[string]interface{}
 }
 
-//RegisterUdf 注册自定义函数
+// RegisterUdf 注册自定义函数
 func (c *Config) RegisterUdf(name string, value interface{}) {
 	if c.Udf == nil {
 		c.Udf = make(map[string]interface{})

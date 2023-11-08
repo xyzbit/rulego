@@ -17,22 +17,22 @@
 package rulego
 
 import (
-	"github.com/rulego/rulego/api/types"
-	string2 "github.com/rulego/rulego/utils/json"
+	"github.com/xyzbit/rulego/api/types"
+	string2 "github.com/xyzbit/rulego/utils/json"
 )
 
-//JsonParser Json
-type JsonParser struct {
-}
+// JsonParser Json
+type JsonParser struct{}
 
 func (p *JsonParser) DecodeRuleChain(config types.Config, dsl []byte) (types.Node, error) {
 	if rootRuleChainDef, err := ParserRuleChain(dsl); err == nil {
-		//初始化
+		// 初始化
 		return InitRuleChainCtx(config, &rootRuleChainDef)
 	} else {
 		return nil, err
 	}
 }
+
 func (p *JsonParser) DecodeRuleNode(config types.Config, dsl []byte) (types.Node, error) {
 	if node, err := ParserRuleNode(dsl); err == nil {
 		return InitRuleNodeCtx(config, &node)
@@ -40,11 +40,13 @@ func (p *JsonParser) DecodeRuleNode(config types.Config, dsl []byte) (types.Node
 		return nil, err
 	}
 }
+
 func (p *JsonParser) EncodeRuleChain(def interface{}) ([]byte, error) {
-	//缩进符为两个空格
+	// 缩进符为两个空格
 	return string2.MarshalIndent(def, "", "  ")
 }
+
 func (p *JsonParser) EncodeRuleNode(def interface{}) ([]byte, error) {
-	//缩进符为两个空格
+	// 缩进符为两个空格
 	return string2.MarshalIndent(def, "", "  ")
 }

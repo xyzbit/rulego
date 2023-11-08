@@ -17,15 +17,16 @@
 package external
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestRestApiCallNodeOnMsg(t *testing.T) {
 	var node RestApiCallNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["restEndpointUrlPattern"] = "https://gitee.com"
 	configuration["requestMethod"] = "POST"
 	config := types.NewConfig()
@@ -43,5 +44,4 @@ func TestRestApiCallNodeOnMsg(t *testing.T) {
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
-
 }

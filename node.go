@@ -18,8 +18,9 @@ package rulego
 
 import (
 	"errors"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/str"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 const (
@@ -28,15 +29,15 @@ const (
 
 // RuleNodeCtx 节点组件实例定义
 type RuleNodeCtx struct {
-	//组件实例
+	// 组件实例
 	types.Node
-	//组件配置
+	// 组件配置
 	SelfDefinition *RuleNode
-	//规则引擎配置
+	// 规则引擎配置
 	Config types.Config
 }
 
-//InitRuleNodeCtx 初始化RuleNodeCtx
+// InitRuleNodeCtx 初始化RuleNodeCtx
 func InitRuleNodeCtx(config types.Config, selfDefinition *RuleNode) (*RuleNodeCtx, error) {
 	node, err := config.ComponentsRegistry.NewNode(selfDefinition.Type)
 	if err != nil {
@@ -55,7 +56,6 @@ func InitRuleNodeCtx(config types.Config, selfDefinition *RuleNode) (*RuleNodeCt
 			}, nil
 		}
 	}
-
 }
 
 func (rn *RuleNodeCtx) IsDebugMode() bool {
@@ -68,9 +68,9 @@ func (rn *RuleNodeCtx) GetNodeId() types.RuleNodeId {
 
 func (rn *RuleNodeCtx) ReloadSelf(def []byte) error {
 	if ruleNodeCtx, err := rn.Config.Parser.DecodeRuleNode(rn.Config, def); err == nil {
-		//先销毁
+		// 先销毁
 		rn.Destroy()
-		//重新加载
+		// 重新加载
 		rn.Copy(ruleNodeCtx.(*RuleNodeCtx))
 		return nil
 	} else {
@@ -105,7 +105,7 @@ func (rn *RuleNodeCtx) Copy(newCtx *RuleNodeCtx) {
 // 使用全局配置替换节点占位符配置，例如：${global.propertyKey}
 func processGlobalPlaceholders(config types.Config, configuration types.Configuration) types.Configuration {
 	if config.Properties.Values() != nil {
-		var result = make(types.Configuration)
+		result := make(types.Configuration)
 		for key, value := range configuration {
 			if strV, ok := value.(string); ok {
 				result[key] = str.SprintfVar(strV, "global.", config.Properties.Values())

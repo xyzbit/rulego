@@ -17,37 +17,34 @@
 package main
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/endpoint"
-	"github.com/rulego/rulego/endpoint/rest"
-	"github.com/rulego/rulego/utils/json"
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/endpoint"
+	"github.com/xyzbit/rulego/endpoint/rest"
+	"github.com/xyzbit/rulego/utils/json"
 )
 
-//演示获取所有组件配置表单列表接口
-//GET http:{ip}:9090/api/v1/components
-
+// 演示获取所有组件配置表单列表接口
+// GET http:{ip}:9090/api/v1/components
 func main() {
-
 	config := rulego.NewConfig(types.WithDefaultPool())
-	//启动http接收服务
+	// 启动http接收服务
 	restEndpoint := &rest.Rest{Config: rest.Config{Server: ":9090"}, RuleConfig: config}
-	//添加全局拦截器
+	// 添加全局拦截器
 	restEndpoint.AddInterceptors(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		exchange.Out.Headers().Set("Content-Type", "application/json")
 		exchange.Out.Headers().Set("Access-Control-Allow-Origin", "*")
 		userId := exchange.In.Headers().Get("userId")
 		if userId == "blacklist" {
-			//不允许访问
+			// 不允许访问
 			return false
 		}
-		//权限校验逻辑
+		// 权限校验逻辑
 		return true
 	})
-	//路由1
+	// 路由1
 	router1 := endpoint.NewRouter().From("/api/v1/components").Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-
-		//响应组件配置表单列表
+		// 响应组件配置表单列表
 		list, err := json.Marshal(rulego.Registry.GetComponentForms().Values())
 		if err != nil {
 			exchange.Out.SetStatusCode(400)
@@ -58,8 +55,8 @@ func main() {
 		return true
 	}).End()
 
-	//注册路由，POST方式
+	// 注册路由，POST方式
 	restEndpoint.GET(router1)
-	//并启动服务
+	// 并启动服务
 	_ = restEndpoint.Start()
 }

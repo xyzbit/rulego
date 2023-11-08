@@ -17,16 +17,16 @@
 package filter
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestFieldFilterOnMsg1(t *testing.T) {
-
 	var node FieldFilterNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["checkAllKeys"] = true
 	configuration["dataNames"] = "temperature"
 	configuration["metadataNames"] = "productType,name"
@@ -48,10 +48,10 @@ func TestFieldFilterOnMsg1(t *testing.T) {
 		t.Errorf("err=%s", err)
 	}
 }
-func TestFieldFilterOnMsg2(t *testing.T) {
 
+func TestFieldFilterOnMsg2(t *testing.T) {
 	var node FieldFilterNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["checkAllKeys"] = true
 	configuration["dataNames"] = "temperature"
 	configuration["metadataNames"] = "productType,name,location"
@@ -75,9 +75,8 @@ func TestFieldFilterOnMsg2(t *testing.T) {
 }
 
 func TestFieldFilterOnMsg3(t *testing.T) {
-
 	var node FieldFilterNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["checkAllKeys"] = false
 	configuration["dataNames"] = "temperature"
 	configuration["metadataNames"] = "productType,name,location"
@@ -101,9 +100,8 @@ func TestFieldFilterOnMsg3(t *testing.T) {
 }
 
 func TestFieldFilterOnMsg4(t *testing.T) {
-
 	var node FieldFilterNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["checkAllKeys"] = false
 	configuration["dataNames"] = "temperature"
 	configuration["metadataNames"] = "productType,name,location"

@@ -19,22 +19,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/mqtt"
-	"github.com/rulego/rulego/endpoint"
-	endpointMqtt "github.com/rulego/rulego/endpoint/mqtt"
-	endpointRest "github.com/rulego/rulego/endpoint/rest"
-	"github.com/rulego/rulego/utils/fs"
-	"github.com/rulego/rulego/utils/json"
 	"log"
 	"net/http"
-	"path/filepath"
-
-	//_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/mqtt"
+	"github.com/xyzbit/rulego/endpoint"
+	endpointMqtt "github.com/xyzbit/rulego/endpoint/mqtt"
+	endpointRest "github.com/xyzbit/rulego/endpoint/rest"
+	"github.com/xyzbit/rulego/utils/fs"
+	"github.com/xyzbit/rulego/utils/json"
+	//_ "net/http/pprof"
 )
 
 const (
@@ -68,7 +68,7 @@ func init() {
 	flag.StringVar(&logfile, "log_file", "", "日志文件路径.")
 	flag.BoolVar(&ver, "version", false, "打印版本")
 
-	//以下是mqtt 订阅配置的参数
+	// 以下是mqtt 订阅配置的参数
 	flag.BoolVar(&mqttAvailable, "mqtt", false, "是否开启mqtt订阅")
 	flag.StringVar(&mqttClientConfig.Server, "server", "127.0.0.1:1883", "mqtt broker服务地址")
 	flag.StringVar(&mqttClientConfig.Username, "username", "", "mqtt客户端用户名")
@@ -80,11 +80,9 @@ func init() {
 	flag.StringVar(&mqttClientConfig.CertFile, "cert_file", "", "cert_file of the client.")
 	flag.StringVar(&mqttClientConfig.CertKeyFile, "key_file", "", "key_file of the client.")
 	flag.StringVar(&subscribeTopics, "topics", "#", "订阅的主题")
-
 }
 
 func main() {
-
 	flag.Parse()
 
 	if ver {
@@ -92,32 +90,31 @@ func main() {
 		os.Exit(0)
 	}
 
-	//初始化日志
+	// 初始化日志
 	logger = initLogger()
 
 	if ruleFile == "" {
 		ruleFile = "./rules/"
 	} else {
-		//初始化规则链文件夹
+		// 初始化规则链文件夹
 		initRuleGo(logger, ruleFile)
 	}
 
 	if mqttAvailable && mqttClientConfig.Server != "" {
-		//开启mqtt订阅服务接收端点
+		// 开启mqtt订阅服务接收端点
 		mqttServe(logger)
 	}
 	strPort := ":" + strconv.Itoa(port)
-	//开启http服务接收端点
+	// 开启http服务接收端点
 	restServe(logger, strPort)
-
 }
 
-//初始化日志记录器
+// 初始化日志记录器
 func initLogger() *log.Logger {
 	if logfile == "" {
 		return log.New(os.Stdout, "", log.LstdFlags)
 	} else {
-		f, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY, 0600)
+		f, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY, 0o600)
 		if err != nil {
 			panic(err)
 		}
@@ -125,26 +122,24 @@ func initLogger() *log.Logger {
 	}
 }
 
-//初始化规则链池
+// 初始化规则链池
 func initRuleGo(logger *log.Logger, ruleFolder string) {
-
 	config := rulego.NewConfig(types.WithDefaultPool())
-	//调试模式回调信息
-	//debugMode=true 的节点会打印
+	// 调试模式回调信息
+	// debugMode=true 的节点会打印
 	config.OnDebug = func(flowType string, nodeId string, msg types.RuleMsg, relationType string, err error) {
 		config.Logger.Printf("flowType=%s,nodeId=%s,msgType=%s,data=%s,metaData=%s,relationType=%s,err=%s", flowType, nodeId, msg.Type, msg.Data, msg.Metadata, relationType, err)
 	}
 
 	err := rulego.Load(ruleFolder, rulego.WithConfig(config))
-
 	if err != nil {
 		logger.Fatal("parser rule file error:", err)
 	}
 }
 
-//mqtt 订阅服务
+// mqtt 订阅服务
 func mqttServe(logger *log.Logger) {
-	//mqtt 订阅服务 接收端点
+	// mqtt 订阅服务 接收端点
 	mqttEndpoint := &endpointMqtt.Mqtt{
 		Config: mqttClientConfig,
 	}
@@ -157,19 +152,19 @@ func mqttServe(logger *log.Logger) {
 	}
 }
 
-//rest服务 接收端点
+// rest服务 接收端点
 func restServe(logger *log.Logger, addr string) {
 	logger.Println("rest serve initialised.addr=" + addr)
 	restEndpoint := &endpointRest.Rest{
 		Config: endpointRest.Config{Server: addr},
 	}
-	//添加全局拦截器
+	// 添加全局拦截器
 	restEndpoint.AddInterceptors(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		exchange.Out.Headers().Set("Content-Type", "application/json")
 		exchange.Out.Headers().Set("Access-Control-Allow-Origin", "*")
 		return true
 	})
-	//设置跨域
+	// 设置跨域
 	restEndpoint.GlobalOPTIONS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Access-Control-Request-Method") != "" {
 			// 设置 CORS 相关的响应头
@@ -181,26 +176,26 @@ func restServe(logger *log.Logger, addr string) {
 		// 返回 204 状态码
 		w.WriteHeader(http.StatusNoContent)
 	}))
-	//创建获取所有组件列表路由
+	// 创建获取所有组件列表路由
 	restEndpoint.GET(createComponentsRouter())
-	//获取规则链DSL
+	// 获取规则链DSL
 	restEndpoint.GET(createGetDslRouter())
-	//新增/修改规则链DSL
+	// 新增/修改规则链DSL
 	restEndpoint.POST(createSaveDslRouter())
-	//处理请求，并转发到规则引擎
+	// 处理请求，并转发到规则引擎
 	restEndpoint.POST(createPostMsgRouter())
 
-	//注册路由
+	// 注册路由
 	_ = restEndpoint.Start()
 }
 
-//处理请求，并转发到规则引擎
+// 处理请求，并转发到规则引擎
 func createPostMsgRouter() *endpoint.Router {
 	return endpoint.NewRouter().From(msgPath).Transform(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
-		//获取消息类型
+		// 获取消息类型
 		msg.Type = msg.Metadata.GetValue("msgType")
-		//交由哪个规则链ID机芯处理
+		// 交由哪个规则链ID机芯处理
 		chainId := msg.Metadata.GetValue("chainId")
 		msg.Metadata.PutValue("chainId", chainId)
 		return true
@@ -210,7 +205,7 @@ func createPostMsgRouter() *endpoint.Router {
 	}).To("chain:${chainId}").End()
 }
 
-//创建获取指定规则链路由
+// 创建获取指定规则链路由
 func createGetDslRouter() *endpoint.Router {
 	return endpoint.NewRouter().From(rulePath).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
@@ -222,7 +217,7 @@ func createGetDslRouter() *endpoint.Router {
 	}).End()
 }
 
-//创建保存/更新指定规则链路由
+// 创建保存/更新指定规则链路由
 func createSaveDslRouter() *endpoint.Router {
 	return endpoint.NewRouter().From(rulePath).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
@@ -234,11 +229,11 @@ func createSaveDslRouter() *endpoint.Router {
 	}).End()
 }
 
-//创建获取组件列表路由
+// 创建获取组件列表路由
 func createComponentsRouter() *endpoint.Router {
-	//路由1
+	// 路由1
 	return endpoint.NewRouter().From(componentsPath).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-		//响应组件配置表单列表
+		// 响应组件配置表单列表
 		list, err := json.Marshal(rulego.Registry.GetComponentForms().Values())
 		if err != nil {
 			exchange.Out.SetStatusCode(400)
@@ -250,7 +245,7 @@ func createComponentsRouter() *endpoint.Router {
 	}).End()
 }
 
-//获取DSL
+// 获取DSL
 func getDsl(chainId, nodeId string, exchange *endpoint.Exchange) {
 	var def []byte
 	if chainId != "" {
@@ -270,7 +265,7 @@ func getDsl(chainId, nodeId string, exchange *endpoint.Exchange) {
 	exchange.Out.SetBody(def)
 }
 
-//保存或者更新DSL
+// 保存或者更新DSL
 func saveDsl(chainId, nodeId string, exchange *endpoint.Exchange) {
 	var err error
 	if chainId != "" {
@@ -283,10 +278,10 @@ func saveDsl(chainId, nodeId string, exchange *endpoint.Exchange) {
 			}
 		} else {
 			body := exchange.In.Body()
-			//保存到文件
+			// 保存到文件
 			dir, _ := filepath.Split(ruleFile)
 			v, _ := json.Format(body)
-			//保存规则链到文件
+			// 保存规则链到文件
 			err = fs.SaveFile(dir+chainId+".json", v)
 			if err == nil {
 				_, err = rulego.New(chainId, body)

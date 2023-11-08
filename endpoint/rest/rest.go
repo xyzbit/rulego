@@ -19,15 +19,16 @@ package rest
 import (
 	"context"
 	"errors"
-	"github.com/julienschmidt/httprouter"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/endpoint"
-	"github.com/rulego/rulego/utils/maps"
-	"github.com/rulego/rulego/utils/str"
 	"io/ioutil"
 	"net/http"
 	"net/textproto"
 	"strings"
+
+	"github.com/julienschmidt/httprouter"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/endpoint"
+	"github.com/xyzbit/rulego/utils/maps"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 const (
@@ -35,11 +36,11 @@ const (
 	JsonContextType = "application/json"
 )
 
-//RequestMessage http请求消息
+// RequestMessage http请求消息
 type RequestMessage struct {
 	request *http.Request
 	body    []byte
-	//路径参数
+	// 路径参数
 	Params httprouter.Params
 	msg    *types.RuleMsg
 	err    error
@@ -57,6 +58,7 @@ func (r *RequestMessage) Body() []byte {
 	}
 	return r.body
 }
+
 func (r *RequestMessage) Headers() textproto.MIMEHeader {
 	return textproto.MIMEHeader(r.request.Header)
 }
@@ -72,11 +74,12 @@ func (r *RequestMessage) GetParam(key string) string {
 func (r *RequestMessage) SetMsg(msg *types.RuleMsg) {
 	r.msg = msg
 }
+
 func (r *RequestMessage) GetMsg() *types.RuleMsg {
 	if r.msg == nil {
 		ruleMsg := types.NewMsg(0, r.From(), types.JSON, types.NewMetadata(), "")
 		if contentType := r.Headers().Get(ContentTypeKey); contentType == JsonContextType {
-			//如果Content-Type是application/json 类型，把body复制到msg.Data
+			// 如果Content-Type是application/json 类型，把body复制到msg.Data
 			ruleMsg.Data = string(r.Body())
 		}
 
@@ -84,6 +87,7 @@ func (r *RequestMessage) GetMsg() *types.RuleMsg {
 	}
 	return r.msg
 }
+
 func (r *RequestMessage) SetStatusCode(statusCode int) {
 }
 
@@ -103,7 +107,7 @@ func (r *RequestMessage) Request() *http.Request {
 	return r.request
 }
 
-//ResponseMessage http响应消息
+// ResponseMessage http响应消息
 type ResponseMessage struct {
 	request  *http.Request
 	response http.ResponseWriter
@@ -132,6 +136,7 @@ func (r *ResponseMessage) GetParam(key string) string {
 func (r *ResponseMessage) SetMsg(msg *types.RuleMsg) {
 	r.msg = msg
 }
+
 func (r *ResponseMessage) GetMsg() *types.RuleMsg {
 	return r.msg
 }
@@ -157,25 +162,25 @@ func (r *ResponseMessage) Response() http.ResponseWriter {
 	return r.response
 }
 
-//Config Rest 服务配置
+// Config Rest 服务配置
 type Config struct {
 	Server      string
 	CertFile    string
 	CertKeyFile string
 }
 
-//Rest 接收端端点
+// Rest 接收端端点
 type Rest struct {
 	endpoint.BaseEndpoint
-	//配置
+	// 配置
 	Config     Config
 	RuleConfig types.Config
-	//http路由器
+	// http路由器
 	router *httprouter.Router
 	server *http.Server
 }
 
-//Type 组件类型
+// Type 组件类型
 func (rest *Rest) Type() string {
 	return "http"
 }
@@ -184,14 +189,14 @@ func (rest *Rest) New() types.Node {
 	return &Rest{}
 }
 
-//Init 初始化
+// Init 初始化
 func (rest *Rest) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	err := maps.Map2Struct(configuration, &rest.Config)
 	rest.RuleConfig = ruleConfig
 	return err
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (rest *Rest) Destroy() {
 	_ = rest.Close()
 }
@@ -242,7 +247,6 @@ func (rest *Rest) Start() error {
 		err = rest.server.ListenAndServe()
 	}
 	return err
-
 }
 
 // AddRouter 注册1个或者多个路由
@@ -263,12 +267,12 @@ func (rest *Rest) AddRouter(method string, routers ...*endpoint.Router) *Rest {
 	for _, item := range routers {
 		key := rest.routerKey(method, item.FromToString())
 		if old, ok := rest.RouterStorage[key]; ok {
-			//已经存储则，把路由设置可用
+			// 已经存储则，把路由设置可用
 			old.Disable(false)
 		} else {
-			//存储路由
+			// 存储路由
 			rest.RouterStorage[key] = item
-			//添加到http路由器
+			// 添加到http路由器
 			rest.router.Handle(method, item.FromToString(), rest.handler(item))
 		}
 	}
@@ -326,23 +330,23 @@ func (rest *Rest) Router() *httprouter.Router {
 }
 
 func (rest *Rest) Stop() {
-
 }
 
 func (rest *Rest) routerKey(method string, from string) string {
 	return method + " " + from
 }
+
 func (rest *Rest) handler(router *endpoint.Router) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		defer func() {
-			//捕捉异常
+			// 捕捉异常
 			if e := recover(); e != nil {
 				rest.Printf("rest handler err :%v", e)
 			}
 		}()
 		if router.IsDisable() {
 			http.NotFound(w, r)
-			//w.WriteHeader(http.NotFound())
+			// w.WriteHeader(http.NotFound())
 			return
 		}
 		exchange := &endpoint.Exchange{
@@ -353,22 +357,22 @@ func (rest *Rest) handler(router *endpoint.Router) httprouter.Handle {
 			Out: &ResponseMessage{
 				request:  r,
 				response: w,
-			}}
+			},
+		}
 
 		msg := exchange.In.GetMsg()
-		//把路径参数放到msg元数据中
+		// 把路径参数放到msg元数据中
 		for _, param := range params {
 			msg.Metadata.PutValue(param.Key, param.Value)
 		}
 
-		//把url?参数放到msg元数据中
+		// 把url?参数放到msg元数据中
 		for key, value := range r.URL.Query() {
 			if len(value) > 1 {
 				msg.Metadata.PutValue(key, str.ToString(value))
 			} else {
 				msg.Metadata.PutValue(key, value[0])
 			}
-
 		}
 		rest.DoProcess(router, exchange)
 	}

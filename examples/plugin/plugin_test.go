@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	string2 "github.com/rulego/rulego/utils/str"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	string2 "github.com/xyzbit/rulego/utils/str"
 )
 
 var (
@@ -14,12 +15,12 @@ var (
 	shareValue = "shareValue"
 )
 
-//测试插件，需要在linux运行
-//先编译plugin.go
-//go build -buildmode=plugin -o plugin.so plugin.go
+// 测试插件，需要在linux运行
+// 先编译plugin.go
+// go build -buildmode=plugin -o plugin.so plugin.go
 func main() {
 	_ = rulego.Registry.Unregister("test")
-	//注册插件组件
+	// 注册插件组件
 	err := rulego.Registry.RegisterPlugin("test", "./plugin.so")
 	if err != nil {
 		panic(err)

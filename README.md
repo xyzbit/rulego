@@ -58,7 +58,7 @@ RuleGo documentation is hosted on: [rulego.cc](https://rulego.cc) .
 Use the `go get` command to install `RuleGo`:
 
 ```bash
-go get github.com/rulego/rulego
+go get github.com/xyzbit/rulego
 ```
 
 ## Usage
@@ -147,7 +147,7 @@ Description:
 Import the `RuleGo` package and create a rule engine instance:
 
 ```go
-import "github.com/rulego/rulego"
+import "github.com/xyzbit/rulego"
 
 //Create a rule engine instance, each rule engine instance has only one root rule chain
 ruleEngine, err := rulego.New("rule01", []byte(ruleFile))

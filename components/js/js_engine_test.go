@@ -17,16 +17,17 @@
 package js
 
 import (
-	"github.com/rulego/rulego/api/types"
-
-	"github.com/rulego/rulego/test/assert"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
+
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestJsEngine(t *testing.T) {
-	var jsScript = `
+	jsScript := `
 	function Filter(msg, metadata, msgType) {
 	    function result(){
 			return 'aa'
@@ -45,9 +46,9 @@ func TestJsEngine(t *testing.T) {
 	`
 	start := time.Now()
 	config := types.NewConfig()
-	//注册全局配置参数
+	// 注册全局配置参数
 	config.Properties.PutValue("name", "lala")
-	//注册自定义函数
+	// 注册自定义函数
 	config.RegisterUdf("add", func(a, b int) int {
 		return a + b
 	})
@@ -65,8 +66,8 @@ func TestJsEngine(t *testing.T) {
 		i++
 	}
 	group.Wait()
-
 }
+
 func testExecuteJs(t *testing.T, jsEngine *GojaJsEngine, index int, group *sync.WaitGroup) {
 	metadata := map[string]interface{}{
 		"aa": "test",
@@ -98,5 +99,4 @@ func testExecuteJs(t *testing.T, jsEngine *GojaJsEngine, index int, group *sync.
 
 	group.Done()
 	jsEngine.config.Logger.Printf("index:%d,响应:%s,用时：%s", index, response, time.Since(start))
-
 }

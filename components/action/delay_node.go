@@ -28,43 +28,43 @@ package action
 //  }
 import (
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/maps"
-	"github.com/rulego/rulego/utils/str"
 	"strconv"
 	"sync"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/maps"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 var DelayNodeMsgType = "DELAY_NODE_MSG_TYPE"
 
-//注册节点
+// 注册节点
 func init() {
 	Registry.Add(&DelayNode{})
 }
 
-//DelayNodeConfiguration 节点配置
+// DelayNodeConfiguration 节点配置
 type DelayNodeConfiguration struct {
-	//延迟时间，单位秒
+	// 延迟时间，单位秒
 	PeriodInSeconds int
-	//最大允许挂起消息的数量
+	// 最大允许挂起消息的数量
 	MaxPendingMsgs int
-	//通过${metadataKey}方式从metadata变量中获取，延迟时间，如果该值有值，优先取该值。
+	// 通过${metadataKey}方式从metadata变量中获取，延迟时间，如果该值有值，优先取该值。
 	PeriodInSecondsPattern string
 }
 
-//DelayNode
-//当特定传入消息的延迟期达到后，该消息将从挂起队列中删除，并通过成功链路(`Success`)路由到下一个节点。
-//如果已经达到了最大挂起消息限制，则每个下一条消息都会通过失败链路(`Failure`)路由。
-
+// DelayNode
+// 当特定传入消息的延迟期达到后，该消息将从挂起队列中删除，并通过成功链路(`Success`)路由到下一个节点。
+// 如果已经达到了最大挂起消息限制，则每个下一条消息都会通过失败链路(`Failure`)路由。
 type DelayNode struct {
-	//节点配置
+	// 节点配置
 	Config DelayNodeConfiguration
-	//消息队列
+	// 消息队列
 	PendingMsgs map[string]types.RuleMsg
 	mu          sync.Mutex
 }
 
-//Type 组件类型
+// Type 组件类型
 func (x *DelayNode) Type() string {
 	return "delay"
 }
@@ -73,15 +73,14 @@ func (x *DelayNode) New() types.Node {
 	return &DelayNode{Config: DelayNodeConfiguration{PeriodInSeconds: 60, MaxPendingMsgs: 1000}}
 }
 
-//Init 初始化
+// Init 初始化
 func (x *DelayNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	x.PendingMsgs = make(map[string]types.RuleMsg)
 	return maps.Map2Struct(configuration, &x.Config)
 }
 
-//OnMsg 处理消息
+// OnMsg 处理消息
 func (x *DelayNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
-
 	if msg.Type == DelayNodeMsgType {
 		x.mu.Lock()
 		defer x.mu.Unlock()
@@ -94,14 +93,14 @@ func (x *DelayNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 		}
 
 	} else {
-		//获取队列长度
+		// 获取队列长度
 		x.mu.Lock()
 		length := len(x.PendingMsgs)
 		x.mu.Unlock()
 
 		if length < x.Config.MaxPendingMsgs {
 			periodInSeconds := x.Config.PeriodInSeconds
-			//从Metadata获取延迟时间
+			// 从Metadata获取延迟时间
 			if x.Config.PeriodInSecondsPattern != "" {
 				if v, err := strconv.Atoi(str.SprintfDict(x.Config.PeriodInSecondsPattern, msg.Metadata.Values())); err != nil {
 					ctx.TellFailure(msg, err)
@@ -127,7 +126,7 @@ func (x *DelayNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	return nil
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (x *DelayNode) Destroy() {
 	x.PendingMsgs = make(map[string]types.RuleMsg)
 }

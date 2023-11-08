@@ -19,9 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
 var (
@@ -31,10 +32,9 @@ var (
 	addShareValue = "addShareValue"
 )
 
-//演示自定义组件
+// 演示自定义组件
 func main() {
-
-	//注册自定义组件
+	// 注册自定义组件
 	rulego.Registry.Register(&UpperNode{})
 	rulego.Registry.Register(&TimeNode{})
 

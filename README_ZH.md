@@ -57,7 +57,7 @@
 使用`go get`命令安装`RuleGo`：
 
 ```bash
-go get github.com/rulego/rulego
+go get github.com/xyzbit/rulego
 ```
 
 ## 使用
@@ -148,7 +148,7 @@ go get github.com/rulego/rulego
 导入`RuleGo`包并创建一个规则引擎实例：
 
 ```go
-import "github.com/rulego/rulego"
+import "github.com/xyzbit/rulego"
 
 //创建一个规则引擎实例，每个规则引擎实例有且只有一个根规则链
 ruleEngine, err := rulego.New("rule01", []byte(ruleFile))

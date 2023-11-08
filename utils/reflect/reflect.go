@@ -17,22 +17,23 @@
 package reflect
 
 import (
-	"github.com/rulego/rulego/api/types"
 	"reflect"
 	"strings"
+
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//GetComponentForm 获取组件的表单结构
+// GetComponentForm 获取组件的表单结构
 func GetComponentForm(component types.Node) types.ComponentForm {
 	var componentForm types.ComponentForm
 
 	t, configField, configValue := GetComponentConfig(component)
 	componentForm.Label = t.Name()
 	componentForm.Type = component.Type()
-	componentForm.Pkg = strings.Replace(t.PkgPath(), "github.com/rulego/rulego/", "", -1)
-	componentForm.Pkg = strings.Replace(componentForm.Pkg, "github.com/rulego/rulego-components/", "", -1)
+	componentForm.Pkg = strings.Replace(t.PkgPath(), "github.com/xyzbit/rulego/", "", -1)
+	componentForm.Pkg = strings.Replace(componentForm.Pkg, "github.com/xyzbit/rulego-components/", "", -1)
 	componentForm.Fields = GetFields(configField, configValue)
-	var relationTypes = []string{types.Success, types.Failure}
+	relationTypes := []string{types.Success, types.Failure}
 
 	if strings.Contains(strings.ToLower(componentForm.Label), "filter") {
 		relationTypes = []string{types.True, types.False, types.Failure}
@@ -40,14 +41,14 @@ func GetComponentForm(component types.Node) types.ComponentForm {
 		relationTypes = []string{}
 	}
 	componentForm.RelationTypes = &relationTypes
-	//如果实现ComponentDefGetter接口，使用接口定义的代替
+	// 如果实现ComponentDefGetter接口，使用接口定义的代替
 	if componentDefGetter, ok := component.(types.ComponentDefGetter); ok {
 		componentForm = coverComponentForm(componentDefGetter, componentForm)
 	}
 	return componentForm
 }
 
-//使用ComponentDefGetter接口定义的覆盖
+// 使用ComponentDefGetter接口定义的覆盖
 func coverComponentForm(from types.ComponentDefGetter, toComponentForm types.ComponentForm) types.ComponentForm {
 	def := from.Def()
 	if def.Type != "" {
@@ -71,7 +72,7 @@ func coverComponentForm(from types.ComponentDefGetter, toComponentForm types.Com
 	return toComponentForm
 }
 
-//GetComponentConfig 获取组件配置字段和默认值
+// GetComponentConfig 获取组件配置字段和默认值
 func GetComponentConfig(component types.Node) (reflect.Type, reflect.StructField, reflect.Value) {
 	component = component.New()
 	t := reflect.TypeOf(component)
@@ -100,7 +101,7 @@ func GetComponentConfig(component types.Node) (reflect.Type, reflect.StructField
 	return t, configField, configValue
 }
 
-//GetFields 获取组件config字段
+// GetFields 获取组件config字段
 func GetFields(configField reflect.StructField, configValue reflect.Value) []types.ComponentFormField {
 	var fields []types.ComponentFormField
 	if configField.Type != nil {
@@ -121,7 +122,7 @@ func GetFields(configField reflect.StructField, configValue reflect.Value) []typ
 				typeName = "array"
 			} else if field.Type.Kind() == reflect.Struct {
 				typeName = "struct"
-				//如果字段类型是结构体，那么递归调用 GetFields 函数，传入字段的类型对象和值对象，获取子字段的信息
+				// 如果字段类型是结构体，那么递归调用 GetFields 函数，传入字段的类型对象和值对象，获取子字段的信息
 				subFields = GetFields(field, configValue.Field(i))
 			}
 

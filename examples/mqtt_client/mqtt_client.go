@@ -18,21 +18,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//数据经过js转换后，增加deviceId变量，然后往主题 topic: /device/msg/${deviceId}发送处理后msg数据
-//其中${deviceId}为元数据的变量
+// 数据经过js转换后，增加deviceId变量，然后往主题 topic: /device/msg/${deviceId}发送处理后msg数据
+// 其中${deviceId}为元数据的变量
 func main() {
-
 	config := rulego.NewConfig()
 
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 
-	//js处理后，并调用http推送
+	// js处理后，并调用http推送
 	ruleEngine, err := rulego.New("rule01", []byte(chainJsonFile), rulego.WithConfig(config))
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func main() {
 
 	ruleEngine.OnMsgWithOptions(msg, types.WithEndFunc(func(msg types.RuleMsg, err error) {
 		fmt.Println("msg处理结果=====")
-		//得到规则链处理结果
+		// 得到规则链处理结果
 		fmt.Println(msg, err)
 	}))
 

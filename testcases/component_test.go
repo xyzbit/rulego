@@ -18,20 +18,23 @@ package testcases
 
 import (
 	"context"
-	"github.com/rulego/rulego/api/types"
 	"strings"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//UpperNode A plugin that converts the message data to uppercase
+// UpperNode A plugin that converts the message data to uppercase
 type UpperNode struct{}
 
 func (n *UpperNode) Type() string {
 	return "test/upper"
 }
+
 func (n *UpperNode) New() types.Node {
 	return &UpperNode{}
 }
+
 func (n *UpperNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	// Do some initialization work
 	return nil
@@ -43,7 +46,7 @@ func (n *UpperNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	if v != nil {
 		msg.Metadata.PutValue(shareKey, v.(string))
 	}
-	//增加新的共享数据
+	// 增加新的共享数据
 	modifyCtx := context.WithValue(ctx.GetContext(), addShareKey, addShareValue)
 	ctx.SetContext(modifyCtx)
 	// Send the modified message to the next node

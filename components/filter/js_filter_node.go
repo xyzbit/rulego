@@ -28,39 +28,40 @@ package filter
 //      }
 import (
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/js"
-	"github.com/rulego/rulego/utils/json"
-	"github.com/rulego/rulego/utils/maps"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/js"
+	"github.com/xyzbit/rulego/utils/json"
+	"github.com/xyzbit/rulego/utils/maps"
 )
 
 func init() {
 	Registry.Add(&JsFilterNode{})
 }
 
-//JsFilterNodeConfiguration 节点配置
+// JsFilterNodeConfiguration 节点配置
 type JsFilterNodeConfiguration struct {
-	//JsScript 配置函数体脚本内容
+	// JsScript 配置函数体脚本内容
 	// 使用js脚本进行过滤
-	//完整脚本函数：
-	//function Filter(msg, metadata, msgType) { ${JsScript} }
-	//return bool
+	// 完整脚本函数：
+	// function Filter(msg, metadata, msgType) { ${JsScript} }
+	// return bool
 	JsScript string
 }
 
-//JsFilterNode 使用js脚本过滤传入信息
-//如果 `True`发送信息到`True`链, `False`发到`False`链。
-//如果 脚本执行失败则发送到`Failure`链
-//消息体可以通过`msg`变量访问，msg 是string类型。例如:`return msg.temperature > 50;`
-//消息元数据可以通过`metadata`变量访问。例如 `metadata.customerName === 'Lala';`
-//消息类型可以通过`msgType`变量访问.
+// JsFilterNode 使用js脚本过滤传入信息
+// 如果 `True`发送信息到`True`链, `False`发到`False`链。
+// 如果 脚本执行失败则发送到`Failure`链
+// 消息体可以通过`msg`变量访问，msg 是string类型。例如:`return msg.temperature > 50;`
+// 消息元数据可以通过`metadata`变量访问。例如 `metadata.customerName === 'Lala';`
+// 消息类型可以通过`msgType`变量访问.
 type JsFilterNode struct {
-	//节点配置
+	// 节点配置
 	Config   JsFilterNodeConfiguration
 	jsEngine types.JsEngine
 }
 
-//Type 组件类型
+// Type 组件类型
 func (x *JsFilterNode) Type() string {
 	return "jsFilter"
 }
@@ -69,7 +70,7 @@ func (x *JsFilterNode) New() types.Node {
 	return &JsFilterNode{}
 }
 
-//Init 初始化
+// Init 初始化
 func (x *JsFilterNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	err := maps.Map2Struct(configuration, &x.Config)
 	if err == nil {
@@ -79,7 +80,7 @@ func (x *JsFilterNode) Init(ruleConfig types.Config, configuration types.Configu
 	return err
 }
 
-//OnMsg 处理消息
+// OnMsg 处理消息
 func (x *JsFilterNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	var data interface{} = msg.Data
 	if msg.DataType == types.JSON {
@@ -103,7 +104,7 @@ func (x *JsFilterNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	}
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (x *JsFilterNode) Destroy() {
 	x.jsEngine.Stop()
 }

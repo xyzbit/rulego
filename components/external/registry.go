@@ -17,7 +17,7 @@
 package external
 
 import (
-	"github.com/rulego/rulego/api/types"
+	"github.com/xyzbit/rulego/api/types"
 )
 
 var Registry = &types.SafeComponentSlice{}

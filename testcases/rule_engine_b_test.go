@@ -17,10 +17,11 @@
 package testcases
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/str"
 	"testing"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
 func BenchmarkChainNotChangeMetadata(b *testing.B) {
@@ -39,14 +40,13 @@ func BenchmarkChainNotChangeMetadata(b *testing.B) {
 }
 
 func BenchmarkChainChangeMetadataAndMsg(b *testing.B) {
-
 	config := rulego.NewConfig()
 
 	ruleEngine, err := rulego.New(str.RandomStr(10), []byte(ruleChainFile), rulego.WithConfig(config))
 	if err != nil {
 		b.Error(err)
 	}
-	//modify s1 node content
+	// modify s1 node content
 	_ = ruleEngine.ReloadChild("s2", []byte(modifyMetadataAndMsgNode))
 
 	b.ResetTimer()
@@ -59,7 +59,7 @@ func BenchmarkChainChangeMetadataAndMsg(b *testing.B) {
 }
 
 func BenchmarkCallRestApiNodeGo(b *testing.B) {
-	//不使用协程池
+	// 不使用协程池
 	config := rulego.NewConfig()
 	ruleEngine, _ := rulego.New(str.RandomStr(10), loadFile("./chain_call_rest_api.json"), rulego.WithConfig(config))
 	b.ResetTimer()
@@ -69,7 +69,7 @@ func BenchmarkCallRestApiNodeGo(b *testing.B) {
 }
 
 func BenchmarkCallRestApiNodeWorkerPool(b *testing.B) {
-	//使用协程池
+	// 使用协程池
 	config := rulego.NewConfig(types.WithDefaultPool())
 	ruleEngine, _ := rulego.New(str.RandomStr(10), loadFile("./chain_call_rest_api.json"), rulego.WithConfig(config))
 	b.ResetTimer()
@@ -78,16 +78,16 @@ func BenchmarkCallRestApiNodeWorkerPool(b *testing.B) {
 	}
 }
 
-//func BenchmarkCallRestApiNodeAnts(b *testing.B) {
-//	defaultAntsPool, _ := ants.NewPool(200000)
-//	//使用协程池
-//	config := rulego.NewConfig(types.WithPool(defaultAntsPool))
-//	ruleEngine, _ := rulego.New(str.RandomStr(10), loadFile("./chain_call_rest_api.json"), rulego.WithConfig(config))
-//	b.ResetTimer()
-//	for i := 0; i < b.N; i++ {
-//		callRestApiNode(ruleEngine)
+//	func BenchmarkCallRestApiNodeAnts(b *testing.B) {
+//		defaultAntsPool, _ := ants.NewPool(200000)
+//		//使用协程池
+//		config := rulego.NewConfig(types.WithPool(defaultAntsPool))
+//		ruleEngine, _ := rulego.New(str.RandomStr(10), loadFile("./chain_call_rest_api.json"), rulego.WithConfig(config))
+//		b.ResetTimer()
+//		for i := 0; i < b.N; i++ {
+//			callRestApiNode(ruleEngine)
+//		}
 //	}
-//}
 func callRestApiNode(ruleEngine *rulego.RuleEngine) {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")

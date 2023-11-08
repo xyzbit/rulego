@@ -17,11 +17,12 @@
 package main
 
 import (
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//TimeNode A plugin that adds a timestamp to the message metadata
+// TimeNode A plugin that adds a timestamp to the message metadata
 type TimeNode struct{}
 
 func (n *TimeNode) Type() string {

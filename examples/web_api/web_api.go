@@ -18,70 +18,70 @@ package main
 
 import (
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/action"
-	"github.com/rulego/rulego/endpoint"
-	"github.com/rulego/rulego/endpoint/rest"
-	"github.com/rulego/rulego/utils/json"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/action"
+	"github.com/xyzbit/rulego/endpoint"
+	"github.com/xyzbit/rulego/endpoint/rest"
+	"github.com/xyzbit/rulego/utils/json"
 )
 
-//使用router开发web应用
+// 使用router开发web应用
 func main() {
-
 	config := rulego.NewConfig(types.WithDefaultPool())
-	//注册规则链
+	// 注册规则链
 	_, _ = rulego.New("default", []byte(chainJsonFile), rulego.WithConfig(config))
 
-	//启动http接收服务
+	// 启动http接收服务
 	restEndpoint := &rest.Rest{Config: rest.Config{Server: ":9090"}, RuleConfig: config}
-	//添加全局拦截器
+	// 添加全局拦截器
 	restEndpoint.AddInterceptors(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-		//模拟鉴权
+		// 模拟鉴权
 		userId := exchange.In.Headers().Get("userId")
 		if userId == "blacklist" {
-			//不允许访问
+			// 不允许访问
 			return false
 		}
-		//权限校验逻辑
+		// 权限校验逻辑
 		return true
 	})
-	//路由1
+	// 路由1
 	router1 := endpoint.NewRouter().From("/api/v1/user/:id").Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		id := exchange.In.GetMsg().Metadata.GetValue("id")
-		//模拟查询数据库
+		// 模拟查询数据库
 		user := struct {
 			Id   string
 			Name string
 		}{Id: id, Name: "test"}
 		body, _ := json.Marshal(user)
-		//响应结果
+		// 响应结果
 		exchange.Out.SetBody(body)
 		return true
 	}).End()
 
-	//注册路由,Get 方法
+	// 注册路由,Get 方法
 	restEndpoint.GET(router1)
 
-	//路由2 采用配置方式调用规则链
+	// 路由2 采用配置方式调用规则链
 	router2 := endpoint.NewRouter().From("/api/v1/userEvent").To("chain:default").End()
 
-	//路由3 采用配置方式调用规则链,to路径带变量
+	// 路由3 采用配置方式调用规则链,to路径带变量
 	router3 := endpoint.NewRouter().From("/api/v1/msg2Chain2/:msgType").Transform(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
-		//获取消息类型
+		// 获取消息类型
 		msg.Type = msg.Metadata.GetValue("msgType")
 
-		//从header获取用户ID
+		// 从header获取用户ID
 		userId := exchange.In.Headers().Get("userId")
 		if userId == "" {
 			userId = "default"
 		}
-		//把userId存放在msg元数据
+		// 把userId存放在msg元数据
 		msg.Metadata.PutValue("userId", userId)
 		return true
 	}).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-		//响应给客户端
+		// 响应给客户端
 		exchange.Out.Headers().Set("Content-Type", "application/json")
 		exchange.Out.SetBody([]byte("ok"))
 		return true
@@ -91,20 +91,20 @@ func main() {
 		return true
 	}).End()
 
-	//路由4 直接调用node组件方式
+	// 路由4 直接调用node组件方式
 	router4 := endpoint.NewRouter().From("/api/v1/msgToComponent1/:msgType").Transform(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
-		//获取消息类型
+		// 获取消息类型
 		msg.Type = msg.Metadata.GetValue("msgType")
 		return true
 	}).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-		//响应给客户端
+		// 响应给客户端
 		exchange.Out.Headers().Set("Content-Type", "application/json")
 		exchange.Out.SetBody([]byte("ok"))
 		return true
 	}).ToComponent(func() types.Node {
-		//定义日志组件，处理数据
-		var configuration = make(types.Configuration)
+		// 定义日志组件，处理数据
+		configuration := make(types.Configuration)
 		configuration["jsScript"] = `
 		return 'log::Incoming message:\n' + JSON.stringify(msg) + '\nIncoming metadata:\n' + JSON.stringify(metadata);
         `
@@ -113,14 +113,14 @@ func main() {
 		return logNode
 	}()).End()
 
-	//路由5 采用配置方式调用node组件
+	// 路由5 采用配置方式调用node组件
 	router5 := endpoint.NewRouter().From("/api/v1/msgToComponent2/:msgType").Transform(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
 		msg := exchange.In.GetMsg()
-		//获取消息类型
+		// 获取消息类型
 		msg.Type = msg.Metadata.GetValue("msgType")
 		return true
 	}).Process(func(router *endpoint.Router, exchange *endpoint.Exchange) bool {
-		//响应给客户端
+		// 响应给客户端
 		exchange.Out.Headers().Set("Content-Type", "application/json")
 		exchange.Out.SetBody([]byte("ok"))
 		return true
@@ -128,9 +128,9 @@ func main() {
 		return 'log::Incoming message:\n' + JSON.stringify(msg) + '\nIncoming metadata:\n' + JSON.stringify(metadata);
         `}).End()
 
-	//注册路由，POST方式
+	// 注册路由，POST方式
 	restEndpoint.POST(router2, router3, router4, router5)
-	//并启动服务
+	// 并启动服务
 	_ = restEndpoint.Start()
 }
 

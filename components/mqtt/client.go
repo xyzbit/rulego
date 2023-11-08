@@ -19,50 +19,50 @@ package mqtt
 import (
 	"crypto/tls"
 	"crypto/x509"
-	paho "github.com/eclipse/paho.mqtt.golang"
-	string2 "github.com/rulego/rulego/utils/str"
-	"log"
-
 	"io/ioutil"
+	"log"
 	"sync"
 	"time"
+
+	paho "github.com/eclipse/paho.mqtt.golang"
+	string2 "github.com/xyzbit/rulego/utils/str"
 )
 
-//Handler 订阅数据处理器
+// Handler 订阅数据处理器
 type Handler struct {
-	//订阅主题
+	// 订阅主题
 	Topic string
-	//订阅Qos
+	// 订阅Qos
 	Qos byte
-	//接收订阅数据 处理
+	// 接收订阅数据 处理
 	Handle func(c paho.Client, data paho.Message)
 }
 
-//Config 客户端配置
+// Config 客户端配置
 type Config struct {
-	//mqtt broker 地址
+	// mqtt broker 地址
 	Server string
-	//用户名
+	// 用户名
 	Username string
-	//密码
+	// 密码
 	Password string
-	//重连重试间隔
+	// 重连重试间隔
 	MaxReconnectInterval time.Duration
 	QOS                  uint8
 	CleanSession         bool
-	//client Id
+	// client Id
 	ClientID    string
 	CAFile      string
 	CertFile    string
 	CertKeyFile string
 }
 
-//Client mqtt客户端
+// Client mqtt客户端
 type Client struct {
 	sync.RWMutex
 	wg     sync.WaitGroup
 	client paho.Client
-	//订阅主题和处理器映射
+	// 订阅主题和处理器映射
 	msgHandlerMap map[string]Handler
 }
 
@@ -80,7 +80,7 @@ func NewClient(conf Config) (*Client, error) {
 	opts.SetPassword(conf.Password)
 	opts.SetCleanSession(conf.CleanSession)
 	if conf.ClientID == "" {
-		//随机clientId
+		// 随机clientId
 		opts.SetClientID("rulego/" + string2.RandomStr(8))
 	} else {
 		opts.SetClientID(conf.ClientID)
@@ -96,7 +96,7 @@ func NewClient(conf Config) (*Client, error) {
 	if err != nil {
 		log.Printf("error loading mqtt certificate files,ca_cert=%s,tls_cert=%s,tls_key=%s", conf.CAFile, conf.CertFile, conf.CertKeyFile)
 	}
-	//tls
+	// tls
 	if tlsconfig != nil {
 		opts.SetTLSConfig(tlsconfig)
 	}
@@ -114,7 +114,7 @@ func NewClient(conf Config) (*Client, error) {
 	return &b, nil
 }
 
-//RegisterHandler 注册订阅数据处理器
+// RegisterHandler 注册订阅数据处理器
 func (b *Client) RegisterHandler(handler Handler) {
 	b.Lock()
 	defer b.Unlock()
@@ -122,7 +122,7 @@ func (b *Client) RegisterHandler(handler Handler) {
 	b.subscribeHandler(handler)
 }
 
-//UnregisterHandler 删除订阅数据处理器
+// UnregisterHandler 删除订阅数据处理器
 func (b *Client) UnregisterHandler(topic string) error {
 	if token := b.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		return token.Error()
@@ -134,7 +134,7 @@ func (b *Client) UnregisterHandler(topic string) error {
 	}
 }
 
-//GetHandlerByUpTopic 通过主题获取数据处理器
+// GetHandlerByUpTopic 通过主题获取数据处理器
 func (b *Client) GetHandlerByUpTopic(topic string) Handler {
 	b.RLock()
 	defer b.RUnlock()
@@ -148,20 +148,18 @@ func (b *Client) Close() error {
 	return nil
 }
 
-//Publish 发布数据
+// Publish 发布数据
 func (b *Client) Publish(topic string, qos byte, data []byte) error {
 	if token := b.client.Publish(topic, qos, false, data); token.Wait() && token.Error() != nil {
 		return token.Error()
 	} else {
 		return nil
 	}
-
 }
 
 func (b *Client) onConnected(c paho.Client) {
 	log.Printf("connected to mqtt server")
 	b.subscribe()
-
 }
 
 func (b *Client) subscribe() {
@@ -174,7 +172,7 @@ func (b *Client) subscribeHandler(handler Handler) {
 	topic := handler.Topic
 	for {
 		log.Printf("subscribing to topic,topic=%s,qos=%d", topic, int(handler.Qos))
-		if token := b.client.Subscribe(topic, handler.Qos, handler.Handle).(*paho.SubscribeToken); token.Wait() && (token.Error() != nil || is128Err(token, topic)) { //128 ACK错误
+		if token := b.client.Subscribe(topic, handler.Qos, handler.Handle).(*paho.SubscribeToken); token.Wait() && (token.Error() != nil || is128Err(token, topic)) { // 128 ACK错误
 			log.Printf("subscribe error,topic=%s,qos=%d", topic, int(handler.Qos))
 			time.Sleep(2 * time.Second)
 			continue
@@ -183,7 +181,7 @@ func (b *Client) subscribeHandler(handler Handler) {
 	}
 }
 
-//判断是否是acl 128错误
+// 判断是否是acl 128错误
 func is128Err(token *paho.SubscribeToken, topic string) bool {
 	result, ok := token.Result()[topic]
 	return ok && result == 128

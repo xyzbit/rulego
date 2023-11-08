@@ -17,9 +17,10 @@
 package str
 
 import (
-	"github.com/rulego/rulego/test/assert"
 	"reflect"
 	"testing"
+
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestSprintfDict(t *testing.T) {
@@ -60,8 +61,8 @@ func TestToString(t *testing.T) {
 		"name": "lala",
 	}
 	assert.Equal(t, "{\"name\":\"lala\"}", ToString(x))
-
 }
+
 func TestToStringMapString(t *testing.T) {
 	var x interface{}
 	x = map[string]interface{}{

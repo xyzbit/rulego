@@ -29,9 +29,10 @@ package external
 
 import (
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/utils/maps"
-	"github.com/rulego/rulego/utils/str"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/utils/maps"
+	"github.com/xyzbit/rulego/utils/str"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -39,26 +40,26 @@ func init() {
 	Registry.Add(&SshNode{})
 }
 
-//SshConfiguration 配置
+// SshConfiguration 配置
 type SshConfiguration struct {
-	//Host ssh 主机地址
+	// Host ssh 主机地址
 	Host string
-	//Port ssh 主机端口
+	// Port ssh 主机端口
 	Port int
-	//Username ssh登录用户名
+	// Username ssh登录用户名
 	Username string
-	//Password ssh登录密码
+	// Password ssh登录密码
 	Password string
-	//Cmd shell命令,可以使用 ${metaKeyName} 替换元数据中的变量
+	// Cmd shell命令,可以使用 ${metaKeyName} 替换元数据中的变量
 	Cmd string
 }
 
 // SshNode shell 组件
-//通过ssh协议执行远程shell脚本
-//脚本执行结果返回到msg,交给下一个节点
-//DataType 会强制转成TEXT
+// 通过ssh协议执行远程shell脚本
+// 脚本执行结果返回到msg,交给下一个节点
+// DataType 会强制转成TEXT
 type SshNode struct {
-	//节点配置
+	// 节点配置
 	Config SshConfiguration
 	// client 是一个 ssh.Client 类型的字段，用来保存 ssh 客户端对象
 	client *ssh.Client
@@ -95,7 +96,6 @@ func (x *SshNode) Init(ruleConfig types.Config, configuration types.Configuratio
 		}
 	}
 	return err
-
 }
 
 // OnMsg 方法用来处理消息，每条流入组件的数据会经过该函数处理
@@ -138,7 +138,6 @@ func (x *SshNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 		ctx.TellFailure(msg, err)
 		return err
 	}
-
 }
 
 // Destroy 方法用来销毁组件，做一些资源释放操作

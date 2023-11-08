@@ -17,14 +17,14 @@
 package main
 
 import (
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
-//根据不同消息类型，路由到不同节点处理
+// 根据不同消息类型，路由到不同节点处理
 func main() {
-
 	config := rulego.NewConfig()
 	ruleEngine, err := rulego.New("rule01", []byte(chainJsonFile), rulego.WithConfig(config))
 	if err != nil {
@@ -33,15 +33,15 @@ func main() {
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
 
-	//TEST_MSG_TYPE1 找到2条chains
+	// TEST_MSG_TYPE1 找到2条chains
 	msg := types.NewMsg(0, "TEST_MSG_TYPE1", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
 
-	//TEST_MSG_TYPE2 找到1条chain
+	// TEST_MSG_TYPE2 找到1条chain
 	msg = types.NewMsg(0, "TEST_MSG_TYPE2", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
 
-	//TEST_MSG_TYPE3 找到0条chain
+	// TEST_MSG_TYPE3 找到0条chain
 	msg = types.NewMsg(0, "TEST_MSG_TYPE3", types.JSON, metaData, "{\"temperature\":41}")
 	ruleEngine.OnMsg(msg)
 

@@ -17,10 +17,11 @@
 package filter
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestMsgTypeSwitchNodeOnMsg(t *testing.T) {
@@ -36,7 +37,6 @@ func TestMsgTypeSwitchNodeOnMsg(t *testing.T) {
 		} else if msg.Type == "INACTIVITY_EVENT" {
 			assert.Equal(t, "INACTIVITY_EVENT", relationType)
 		}
-
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
 	msg := ctx.NewMsg("ACTIVITY_EVENT", metaData, "AA")

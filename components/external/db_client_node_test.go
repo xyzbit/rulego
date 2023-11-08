@@ -18,30 +18,31 @@ package external
 
 import (
 	"fmt"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
-	"github.com/rulego/rulego/utils/json"
-	"github.com/rulego/rulego/utils/str"
 	"testing"
 	"time"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
+	"github.com/xyzbit/rulego/utils/json"
+	"github.com/xyzbit/rulego/utils/str"
 )
 
-//测试mysql增删修改查
+// 测试mysql增删修改查
 func TestMysqlDbClientNodeOnMsg(t *testing.T) {
 	testDbClientNodeOnMsg(t, "mysql", "root:root@tcp(127.0.0.1:3306)/test")
 }
 
-//测试postgres增删修改查
+// 测试postgres增删修改查
 func TestPgDbClientNodeOnMsg(t *testing.T) {
 	testDbClientNodeOnMsg(t, "postgres", "postgres://postgres:postgres@127.0.0.1:5432/test?sslmode=disable")
 }
-func testDbClientNodeOnMsg(t *testing.T, dbType, dsn string) {
 
+func testDbClientNodeOnMsg(t *testing.T, dbType, dsn string) {
 	metaData := types.NewMetadata()
 	config := types.NewConfig()
 
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	// 测试插入数据的操作
 	configuration["sql"] = "insert into users (id,name, age) values (?,?,?)"
 	configuration["params"] = []interface{}{"${id}", "${name}", "${age}"}
@@ -69,7 +70,7 @@ func testDbClientNodeOnMsg(t *testing.T, dbType, dsn string) {
 		t.Errorf("err=%s", err)
 	}
 	time.Sleep(time.Second)
-	//插入第二条
+	// 插入第二条
 	ctx = test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
 		assert.Equal(t, types.Success, relationType)
 		assert.Equal(t, "1", msg.Metadata.GetValue(rowsAffectedKey))
@@ -115,7 +116,7 @@ func testDbClientNodeOnMsg(t *testing.T, dbType, dsn string) {
 	}
 
 	// 测试查询多条记录的操作
-	//不使用占位符参数
+	// 不使用占位符参数
 	configuration["sql"] = "select * from users where age >= ${age}"
 	configuration["params"] = nil
 	configuration["getOne"] = false

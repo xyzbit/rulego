@@ -17,8 +17,9 @@
 package maps
 
 import (
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 type User struct {
@@ -34,7 +35,7 @@ func TestMap2Struct(t *testing.T) {
 	m := make(map[string]interface{})
 	m["userName"] = "lala"
 	m["Age"] = float64(5)
-	m["Address"] = Address{"test"}
+	m["address"] = Address{"test"}
 	var user User
 	_ = Map2Struct(m, &user)
 	assert.Equal(t, "lala", user.Username)

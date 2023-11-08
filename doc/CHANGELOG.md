@@ -45,8 +45,8 @@
 
 ### 其他信息
 
-- 欢迎在 [Gitee](https://gitee.com/rulego/rulego) 或者 [Github](https://github.com/rulego/rulego) 上提交反馈或建议
-- 扩展组件rulego-components：[Gitee](https://gitee.com/rulego/rulego-components)  [Github](https://github.com/rulego/rulego-components)
+- 欢迎在 [Gitee](https://gitee.com/rulego/rulego) 或者 [Github](https://github.com/xyzbit/rulego) 上提交反馈或建议
+- 扩展组件rulego-components：[Gitee](https://gitee.com/rulego/rulego-components)  [Github](https://github.com/xyzbit/rulego-components)
 - 欢迎加入社区讨论QQ群：720103251
 
 
@@ -54,7 +54,7 @@
 
 ### 新功能
 
-- 新增数据集成模块(**Endpoint**)，使用文档和介绍点击：[Gitee](https://gitee.com/rulego/rulego/blob/main/endpoint/README_ZH.md) 或者 [Github](https://github.com/rulego/rulego/blob/main/endpoint/README_ZH.md)
+- 新增数据集成模块(**Endpoint**)，使用文档和介绍点击：[Gitee](https://gitee.com/rulego/rulego/blob/main/endpoint/README_ZH.md) 或者 [Github](https://github.com/xyzbit/rulego/blob/main/endpoint/README_ZH.md)
     - 提供统一的数据处理抽象，方便异构系统数据集成，目前支持HTTP和MQTT协议
     - 支持其他协议集成扩展，例如：kafka数据等
     - 支持统一的数据路由和数据响应
@@ -78,6 +78,6 @@
 ### 其他信息
 
 - 新增RuleGo扩展组件库项目，欢迎贡献组件
-    - 详情点击：[Gitee](https://gitee.com/rulego/rulego-components) 或者 [Github](https://github.com/rulego/rulego-components)
+    - 详情点击：[Gitee](https://gitee.com/rulego/rulego-components) 或者 [Github](https://github.com/xyzbit/rulego-components)
 
-- 欢迎在 [Gitee](https://gitee.com/rulego/rulego) 或者 [Github](https://github.com/rulego/rulego) 上提交反馈或建议    
+- 欢迎在 [Gitee](https://gitee.com/rulego/rulego) 或者 [Github](https://github.com/xyzbit/rulego) 上提交反馈或建议    

@@ -17,16 +17,17 @@
 package mqtt
 
 import (
-	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/components/mqtt"
-	"github.com/rulego/rulego/endpoint"
-	"github.com/rulego/rulego/utils/maps"
 	"net/textproto"
 	"strconv"
+
+	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/components/mqtt"
+	"github.com/xyzbit/rulego/endpoint"
+	"github.com/xyzbit/rulego/utils/maps"
 )
 
-//RequestMessage http请求消息
+// RequestMessage http请求消息
 type RequestMessage struct {
 	request paho.Message
 	msg     *types.RuleMsg
@@ -36,6 +37,7 @@ type RequestMessage struct {
 func (r *RequestMessage) Body() []byte {
 	return r.request.Payload()
 }
+
 func (r *RequestMessage) Headers() textproto.MIMEHeader {
 	header := make(map[string][]string)
 	header["topic"] = []string{r.request.Topic()}
@@ -83,7 +85,7 @@ func (r *RequestMessage) Request() paho.Message {
 	return r.request
 }
 
-//ResponseMessage http响应消息
+// ResponseMessage http响应消息
 type ResponseMessage struct {
 	request  paho.Message
 	response paho.Client
@@ -115,6 +117,7 @@ func (r *ResponseMessage) GetParam(key string) string {
 func (r *ResponseMessage) SetMsg(msg *types.RuleMsg) {
 	r.msg = msg
 }
+
 func (r *ResponseMessage) GetMsg() *types.RuleMsg {
 	return r.msg
 }
@@ -149,7 +152,7 @@ func (r *ResponseMessage) Response() paho.Client {
 	return r.response
 }
 
-//Mqtt MQTT 接收端端点
+// Mqtt MQTT 接收端端点
 type Mqtt struct {
 	endpoint.BaseEndpoint
 	RuleConfig types.Config
@@ -157,7 +160,7 @@ type Mqtt struct {
 	client     *mqtt.Client
 }
 
-//Type 组件类型
+// Type 组件类型
 func (m *Mqtt) Type() string {
 	return "mqtt"
 }
@@ -166,14 +169,14 @@ func (m *Mqtt) New() types.Node {
 	return &Mqtt{}
 }
 
-//Init 初始化
+// Init 初始化
 func (m *Mqtt) Init(ruleConfig types.Config, configuration types.Configuration) error {
 	err := maps.Map2Struct(configuration, &m.Config)
 	m.RuleConfig = ruleConfig
 	return err
 }
 
-//Destroy 销毁
+// Destroy 销毁
 func (m *Mqtt) Destroy() {
 	_ = m.Close()
 }
@@ -199,10 +202,10 @@ func (m *Mqtt) RemoveRouterWithParams(from string, params ...interface{}) error 
 	return m.client.UnregisterHandler(from)
 }
 
-//AddRouter 添加路由
+// AddRouter 添加路由
 func (m *Mqtt) AddRouter(routers ...*endpoint.Router) *Mqtt {
 	m.saveRouter(routers...)
-	//服务已经启动
+	// 服务已经启动
 	if m.client != nil {
 		for _, router := range routers {
 			if form := router.GetFrom(); form != nil {
@@ -224,7 +227,6 @@ func (m *Mqtt) Start() error {
 		} else {
 			m.client = client
 			for _, router := range m.RouterStorage {
-
 				if form := router.GetFrom(); form != nil {
 					m.client.RegisterHandler(mqtt.Handler{
 						Topic:  form.ToString(),
@@ -239,7 +241,7 @@ func (m *Mqtt) Start() error {
 	return nil
 }
 
-//存储路由
+// 存储路由
 func (m *Mqtt) saveRouter(routers ...*endpoint.Router) {
 	m.Lock()
 	defer m.Unlock()
@@ -251,7 +253,7 @@ func (m *Mqtt) saveRouter(routers ...*endpoint.Router) {
 	}
 }
 
-//从存储器中删除路由
+// 从存储器中删除路由
 func (m *Mqtt) deleteRouter(from string) {
 	m.Lock()
 	defer m.Unlock()
@@ -263,7 +265,7 @@ func (m *Mqtt) deleteRouter(from string) {
 func (m *Mqtt) handler(router *endpoint.Router) func(c paho.Client, data paho.Message) {
 	return func(c paho.Client, data paho.Message) {
 		defer func() {
-			//捕捉异常
+			// 捕捉异常
 			if e := recover(); e != nil {
 				m.Printf("rest handler err :%v", e)
 			}
@@ -275,7 +277,8 @@ func (m *Mqtt) handler(router *endpoint.Router) func(c paho.Client, data paho.Me
 			Out: &ResponseMessage{
 				request:  data,
 				response: c,
-			}}
+			},
+		}
 
 		m.DoProcess(router, exchange)
 	}

@@ -18,15 +18,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/rulego/rulego"
-	"github.com/rulego/rulego/api/types"
 	"sync"
 	"time"
+
+	"github.com/xyzbit/rulego"
+	"github.com/xyzbit/rulego/api/types"
 )
 
 var ruleEngine *rulego.RuleEngine
 
-//初始化规则引擎实例和配置
+// 初始化规则引擎实例和配置
 func init() {
 	config := rulego.NewConfig()
 	//config.OnDebug = func(flowType string, nodeId string, msg types.RuleMsg, relationType string, err error) {
@@ -39,10 +40,10 @@ func init() {
 	}
 }
 
-//测试延迟组件
+// 测试延迟组件
 func main() {
-	//var i = 0
-	//for i < 20 {
+	// var i = 0
+	// for i < 20 {
 
 	metaData := types.NewMetadata()
 	metaData.PutValue("productType", "test01")
@@ -53,7 +54,7 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	start := time.Now()
-	//第1条,走Success链
+	// 第1条,走Success链
 	ruleEngine.OnMsgWithOptions(msg1, types.WithEndFunc(func(msg types.RuleMsg, err error) {
 		fmt.Println("用时:" + time.Since(start).String())
 		useTime := time.Since(start)
@@ -66,8 +67,8 @@ func main() {
 	time.Sleep(time.Millisecond * 200)
 	msg2 := types.NewMsg(0, "TEST_MSG_TYPE2", types.JSON, metaData, "{\"temperature\":42}")
 
-	//fmt.Println("msg2 id=" + msg2.Id)
-	//第2条，因为队列已经满，走Failure链
+	// fmt.Println("msg2 id=" + msg2.Id)
+	// 第2条，因为队列已经满，走Failure链
 	ruleEngine.OnMsgWithOptions(msg2)
 
 	wg.Wait()

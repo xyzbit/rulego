@@ -17,15 +17,16 @@
 package filter
 
 import (
-	"github.com/rulego/rulego/api/types"
-	"github.com/rulego/rulego/test"
-	"github.com/rulego/rulego/test/assert"
 	"testing"
+
+	"github.com/xyzbit/rulego/api/types"
+	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 )
 
 func TestJsSwitchNodeOnMsg(t *testing.T) {
 	var node JsSwitchNode
-	var configuration = make(types.Configuration)
+	configuration := make(types.Configuration)
 	configuration["jsScript"] = `
 		//测试注释
 		return ['one','two'];
@@ -35,7 +36,7 @@ func TestJsSwitchNodeOnMsg(t *testing.T) {
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
-	var i = 0
+	i := 0
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
 		if i == 0 {
 			assert.Equal(t, "one", relationType)
@@ -43,7 +44,6 @@ func TestJsSwitchNodeOnMsg(t *testing.T) {
 			assert.Equal(t, "two", relationType)
 		}
 		i++
-
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
 	msg := ctx.NewMsg("ACTIVITY_EVENT", metaData, "AA")
@@ -51,5 +51,4 @@ func TestJsSwitchNodeOnMsg(t *testing.T) {
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
-
 }
