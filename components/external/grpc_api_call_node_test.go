@@ -17,20 +17,31 @@
 package external
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/xyzbit/rulego/api/types"
 	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/testdata/pb"
 )
 
 func TestRPCApiCallNodeOnMsg(t *testing.T) {
+	// 需要自动生成的代码
+	_ = &pb.GetTaskListReq{}
+
 	var node RPCCallNode
 	configuration := make(types.Configuration)
 	configuration["serviceName"] = "welfare"
 	configuration["method"] = "welfare.v1.Welfare/GetTaskList"
 	configuration["target"] = "127.0.0.1:9098"
+
 	config := types.NewConfig()
+	// config.OnDebug = func(flowType, nodeId string, msg types.RuleMsg, relationType string, err error) {
+	// 	t.Logf("flowType=%s, nodeId=%s, msg=%+v, relationType=%s, err=%s", flowType, nodeId, msg, relationType, err)
+	// }
+	// config.OnEnd = func(msg types.RuleMsg, err error) {
+	// 	t.Logf("end msg=%+v, err=%s", msg, err)
+	// }
+
 	err := node.Init(config, configuration)
 	if err != nil {
 		t.Errorf("err=%s", err)
@@ -41,7 +52,10 @@ func TestRPCApiCallNodeOnMsg(t *testing.T) {
 	})
 	metaData := types.BuildMetadata(make(map[string]string))
 	metaData.PutValue("is_login", "true")
-	msg := ctx.NewMsg("TEST_MSG_TYPE_AA", metaData, `{
+	metaData.PutValue("_req_type", "welfare.v1.GetTaskListReq")
+	metaData.PutValue("_reply_type", "welfare.v1.GetTaskListResp")
+
+	msg := ctx.NewMsg("PB_MSG", metaData, `{
 		"project": "newmedia_rapidapp",
 		"user_status": {
 			"uid": "481739124807512917",
@@ -52,5 +66,4 @@ func TestRPCApiCallNodeOnMsg(t *testing.T) {
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}
-	fmt.Printf("msg.Data = %s", msg.Data)
 }

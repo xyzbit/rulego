@@ -13,14 +13,25 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/runtime/protoiface"
+
+	// "google.golang.org/protobuf/reflect/protoreflect"
 
 	jsoniter "github.com/json-iterator/go"
+)
+
+const (
+	GRPCReqType  = "_req_type"
+	GRPCRespType = "_reply_type"
 )
 
 var _ types.Node = (*RPCCallNode)(nil)
 
 // RPCCallNodeConfiguration rpc配置
 type RPCCallNodeConfiguration struct {
+	PackageName string
 	ServiceName string
 	Method      string
 	Target      string
@@ -41,7 +52,7 @@ func (x *RPCCallNode) New() types.Node {
 }
 
 func (x *RPCCallNode) Type() string {
-	return "rpcCall"
+	return "grpcCall"
 }
 
 func (x *RPCCallNode) Init(ruleConfig types.Config, configuration types.Configuration) error {
@@ -56,14 +67,19 @@ func (x *RPCCallNode) Init(ruleConfig types.Config, configuration types.Configur
 func (x *RPCCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	metaData := msg.Metadata.Values()
 	params := str.SprintfDict(msg.Data, metaData)
-	paramsMap := make(map[string]interface{})
-	err := jsoniter.UnmarshalFromString(params, &paramsMap)
+
+	req, err := getMessageV1(metaData[GRPCReqType])
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
-	retMap := make(map[string]interface{})
+	reply, err := getMessageV1(metaData[GRPCRespType])
+	if err != nil {
+		ctx.TellFailure(msg, err)
+	}
+	if err := jsoniter.Unmarshal([]byte(params), req); err != nil {
+		ctx.TellFailure(msg, err)
+	}
 
-	// 设置header
 	gctx := ctx.GetContext()
 	for key, value := range x.Config.Headers {
 		header := make(map[string]string)
@@ -71,16 +87,17 @@ func (x *RPCCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 		md := metadata.New(header)
 		gctx = metadata.NewIncomingContext(gctx, md)
 	}
-	err = x.gconn.Invoke(gctx, x.Config.Method, &paramsMap, &retMap)
+
+	err = x.gconn.Invoke(gctx, x.Config.Method, req, reply)
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
-	// succeed
-	data, err := jsoniter.MarshalToString(retMap)
+	data, err := jsoniter.MarshalToString(reply)
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
 	msg.Data = data
+	ctx.TellSuccess(msg)
 
 	return nil
 }
@@ -98,20 +115,6 @@ func NewClientConn(config RPCCallNodeConfiguration) (*grpc.ClientConn, error) {
 	}
 	return conn, nil
 }
-
-// func UnaryClientInterceptor(mdw ...grpc.UnaryClientInterceptor) grpc.DialOption {
-// 	chain := []grpc.UnaryClientInterceptor{
-// 		trace.UnaryClientInterceptor(),
-// 		requestid.UnaryClientInterceptor(),
-// 		logmdw.UnaryClientInterceptor(log.FromContext),
-// 	}
-// 	chain = append(chain, mdw...)
-// 	return grpc.WithChainUnaryInterceptor(chain...)
-// }
-
-// func DiscoveryResolver(discovery registry.Discovery, scheme string) grpc.DialOption {
-// 	return grpc.WithResolvers(lgrpc.NewResolverBuilder(discovery, scheme))
-// }
 
 func DialogOptions(opts ...grpc.DialOption) []grpc.DialOption {
 	options := []grpc.DialOption{
@@ -134,4 +137,22 @@ func DialogOptions(opts ...grpc.DialOption) []grpc.DialOption {
 	}
 	options = append(options, opts...)
 	return options
+}
+
+func getMessageV1(messageType string) (protoiface.MessageV1, error) {
+	if messageType == "" {
+		return nil, fmt.Errorf("message type is empty")
+	}
+	messageDescriptor, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(messageType))
+	if err != nil {
+		return nil, fmt.Errorf("unknown message type: %s", messageType)
+	}
+
+	protoMessage := messageDescriptor.New().Interface()
+	messageV1, ok := protoMessage.(protoiface.MessageV1)
+	if !ok {
+		return nil, fmt.Errorf("message type is not protoiface.MessageV1: %s", messageType)
+	}
+
+	return messageV1, nil
 }
