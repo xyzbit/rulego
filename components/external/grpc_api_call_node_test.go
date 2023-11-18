@@ -17,52 +17,75 @@
 package external
 
 import (
+	"context"
 	"testing"
 
 	"github.com/xyzbit/rulego/api/types"
 	"github.com/xyzbit/rulego/test"
+	"github.com/xyzbit/rulego/test/assert"
 	"github.com/xyzbit/rulego/testdata/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
+
+type MockGRPCConn struct {
+	t *testing.T
+}
+
+func (i *MockGRPCConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+	assert.Equal(i.t, "welfare.v1.Welfare/GetTaskList", method)
+
+	msg, ok := args.(protoiface.MessageV1)
+	assert.True(i.t, ok)
+	assert.Equal(i.t, msg.String(), `project:"test" user_status:{uid:"481739124807512917" is_login:true}`)
+
+	resp := reply.(*pb.GetTaskListResp)
+	resp.Tasks = []*pb.Task{
+		{Id: 1, Key: "key1", Name: "task1"},
+	}
+	return nil
+}
+
+func (i *MockGRPCConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+	i.t.Logf("method: %s", method)
+	return nil, nil
+}
+
+func (i *MockGRPCConn) Close() error {
+	return nil
+}
 
 func TestRPCApiCallNodeOnMsg(t *testing.T) {
 	// 需要自动生成的代码
 	_ = &pb.GetTaskListReq{}
 
-	var node RPCCallNode
-	configuration := make(types.Configuration)
-	configuration["serviceName"] = "welfare"
-	configuration["method"] = "welfare.v1.Welfare/GetTaskList"
-	configuration["target"] = "127.0.0.1:9098"
-
-	config := types.NewConfig()
-	// config.OnDebug = func(flowType, nodeId string, msg types.RuleMsg, relationType string, err error) {
-	// 	t.Logf("flowType=%s, nodeId=%s, msg=%+v, relationType=%s, err=%s", flowType, nodeId, msg, relationType, err)
-	// }
-	// config.OnEnd = func(msg types.RuleMsg, err error) {
-	// 	t.Logf("end msg=%+v, err=%s", msg, err)
-	// }
-
-	err := node.Init(config, configuration)
-	if err != nil {
-		t.Errorf("err=%s", err)
+	node := &RPCCallNode{
+		Config: RPCCallNodeConfiguration{
+			ServiceName: "welfare",
+			Method:      "welfare.v1.Welfare/GetTaskList",
+			Target:      "127.0.0.1:9098",
+		},
+		gconn: &MockGRPCConn{t: t},
 	}
 
+	config := types.NewConfig()
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
-		t.Logf("rule context %+v, relationType: %s", msg, relationType)
+		assert.Equal(t, msg.Data, `{"tasks":[{"id":1,"key":"key1","name":"task1"}]}`)
 	})
+
 	metaData := types.BuildMetadata(make(map[string]string))
 	metaData.PutValue("is_login", "true")
 	metaData.PutValue("_req_type", "welfare.v1.GetTaskListReq")
 	metaData.PutValue("_reply_type", "welfare.v1.GetTaskListResp")
 
 	msg := ctx.NewMsg("PB_MSG", metaData, `{
-		"project": "newmedia_rapidapp",
+		"project": "test",
 		"user_status": {
 			"uid": "481739124807512917",
 			"is_login": ${is_login}
 		}
 	}`)
-	err = node.OnMsg(ctx, msg)
+	err := node.OnMsg(ctx, msg)
 	if err != nil {
 		t.Errorf("err=%s", err)
 	}

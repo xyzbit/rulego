@@ -2,6 +2,7 @@ package external
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"time"
@@ -37,13 +38,22 @@ type RPCCallNodeConfiguration struct {
 	Target      string
 	// ParamsPattern string
 	Headers map[string]string
+	// buffer size
+	// lbalancer
+	// timeout
+	// retry
+}
+
+type ICloseableClientConn interface {
+	grpc.ClientConnInterface
+	io.Closer
 }
 
 type RPCCallNode struct {
 	// 节点配置
 	Config RPCCallNodeConfiguration
-	// grpc client
-	gconn *grpc.ClientConn
+	// grpc client (1.使用interface 2. debug 模式 mock gconn 编写单元 测试)
+	gconn ICloseableClientConn
 }
 
 // 实现Node接口
