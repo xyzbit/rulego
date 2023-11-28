@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
+	"sync"
 	"time"
 
 	"github.com/xyzbit/rulego/api/types"
@@ -18,30 +18,26 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	// "google.golang.org/protobuf/reflect/protoreflect"
-
 	jsoniter "github.com/json-iterator/go"
 )
 
-const (
-	GRPCReqType  = "_req_type"
-	GRPCRespType = "_reply_type"
-)
+var connCache sync.Map
+
+func init() {
+	Registry.Add(&RPCCallNode{})
+}
 
 var _ types.Node = (*RPCCallNode)(nil)
 
 // RPCCallNodeConfiguration rpc配置
 type RPCCallNodeConfiguration struct {
-	PackageName string
-	ServiceName string
-	Method      string
-	Target      string
+	Method   string
+	ReqType  string
+	RespType string
+	Target   string
 	// ParamsPattern string
-	Headers map[string]string
-	// buffer size
-	// lbalancer
-	// timeout
-	// retry
+	Headers   map[string]string
+	KeepAlive bool
 }
 
 type ICloseableClientConn interface {
@@ -52,7 +48,7 @@ type ICloseableClientConn interface {
 type RPCCallNode struct {
 	// 节点配置
 	Config RPCCallNodeConfiguration
-	// grpc client (1.使用interface 2. debug 模式 mock gconn 编写单元 测试)
+	// grpc client
 	gconn ICloseableClientConn
 }
 
@@ -70,19 +66,29 @@ func (x *RPCCallNode) Init(ruleConfig types.Config, configuration types.Configur
 	if err != nil {
 		return err
 	}
+	gconn, ok := connCache.Load(x.Config.Target)
+	if ok {
+		x.gconn = gconn.(*grpc.ClientConn)
+		return nil
+	}
+
 	x.gconn, err = NewClientConn(x.Config)
-	return err
+	if err != nil {
+		return err
+	}
+	connCache.Store(x.Config.Target, x.gconn)
+	return nil
 }
 
 func (x *RPCCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 	metaData := msg.Metadata.Values()
 	params := str.SprintfDict(msg.Data, metaData)
 
-	req, err := getMessageV1(metaData[GRPCReqType])
+	req, err := getMessageV1(x.Config.ReqType)
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
-	reply, err := getMessageV1(metaData[GRPCRespType])
+	reply, err := getMessageV1(x.Config.RespType)
 	if err != nil {
 		ctx.TellFailure(msg, err)
 	}
@@ -107,8 +113,8 @@ func (x *RPCCallNode) OnMsg(ctx types.RuleContext, msg types.RuleMsg) error {
 		ctx.TellFailure(msg, err)
 	}
 	msg.Data = data
+	msg.Metadata.PutValue(x.Config.RespType, data)
 	ctx.TellSuccess(msg)
-
 	return nil
 }
 
@@ -119,9 +125,18 @@ func (x *RPCCallNode) Destroy() {
 
 func NewClientConn(config RPCCallNodeConfiguration) (*grpc.ClientConn, error) {
 	dialOption := []grpc.DialOption{}
+	if config.KeepAlive {
+		keepaliveParams := keepalive.ClientParameters{
+			Time:                10 * time.Second,
+			Timeout:             3 * time.Second,
+			PermitWithoutStream: true,
+		}
+		dialOption = append(dialOption, grpc.WithKeepaliveParams(keepaliveParams))
+	}
+
 	conn, err := grpc.Dial(config.Target, DialogOptions(dialOption...)...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial %s %s connect", config.ServiceName, config.Target)
+		return nil, fmt.Errorf("failed to dial %s connect", config.Target)
 	}
 	return conn, nil
 }
@@ -137,14 +152,7 @@ func DialogOptions(opts ...grpc.DialOption) []grpc.DialOption {
 		),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
 	}
-	if os.Getenv("RUN_MODE") != "dev" {
-		kp := keepalive.ClientParameters{
-			Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
-			Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
-			PermitWithoutStream: true,             // send pings even without active streams
-		}
-		options = append(options, grpc.WithKeepaliveParams(kp))
-	}
+
 	options = append(options, opts...)
 	return options
 }

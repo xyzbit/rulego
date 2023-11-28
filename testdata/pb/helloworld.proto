@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+
+option go_package = "rulego/testdata/pb;pb";
+package helloworld;
+service Greeter {
+
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoReply) {}
+
+  rpc GetWalletInfo (GetWalletInfoRequest) returns (GetWalletInfoReply) {}
+}
+
+
+message HelloRequest {
+  string name = 1;
+  bool is_login = 2;
+}
+message HelloReply {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GetUserInfoRequest {
+  string user_name = 1;
+}
+message GetUserInfoReply {
+  int32 age = 1;
+  string nick_name = 2;
+  string address = 3; 
+}
+
+message GetWalletInfoRequest {
+  string user_name = 1;
+}
+message GetWalletInfoReply {
+  int32 balance = 1;
+}

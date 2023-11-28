@@ -18,6 +18,7 @@ package external
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/xyzbit/rulego/api/types"
@@ -33,16 +34,20 @@ type MockGRPCConn struct {
 }
 
 func (i *MockGRPCConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
-	assert.Equal(i.t, "welfare.v1.Welfare/GetTaskList", method)
+	assert.Equal(i.t, "helloworld.Greeter/SayHello", method)
 
 	msg, ok := args.(protoiface.MessageV1)
 	assert.True(i.t, ok)
-	assert.Equal(i.t, msg.String(), `project:"test" user_status:{uid:"481739124807512917" is_login:true}`)
+	assert.True(i.t, strings.Contains(msg.String(), `name:"RULEGO"`))
+	assert.True(i.t, strings.Contains(msg.String(), `is_login:true`))
 
-	resp := reply.(*pb.GetTaskListResp)
-	resp.Tasks = []*pb.Task{
-		{Id: 1, Key: "key1", Name: "task1"},
+	resp, ok := reply.(*pb.HelloReply)
+	assert.True(i.t, ok)
+	if ok {
+		resp.Code = 200
+		resp.Message = "Hello RULEGO, your login status: true"
 	}
+
 	return nil
 }
 
@@ -56,37 +61,27 @@ func (i *MockGRPCConn) Close() error {
 }
 
 func TestRPCApiCallNodeOnMsg(t *testing.T) {
-	// 需要自动生成的代码
-	_ = &pb.GetTaskListReq{}
-
 	node := &RPCCallNode{
 		Config: RPCCallNodeConfiguration{
-			ServiceName: "welfare",
-			Method:      "welfare.v1.Welfare/GetTaskList",
-			Target:      "127.0.0.1:9098",
+			ReqType:  "helloworld.HelloRequest",
+			RespType: "helloworld.HelloReply",
+			Method:   "helloworld.Greeter/SayHello",
+			Target:   "127.0.0.1:8088",
 		},
 		gconn: &MockGRPCConn{t: t},
 	}
 
 	config := types.NewConfig()
 	ctx := test.NewRuleContext(config, func(msg types.RuleMsg, relationType string) {
-		assert.Equal(t, msg.Data, `{"tasks":[{"id":1,"key":"key1","name":"task1"}]}`)
+		assert.Equal(t, msg.Data, `{"code":200,"message":"Hello RULEGO, your login status: true"}`)
 	})
 
 	metaData := types.BuildMetadata(make(map[string]string))
 	metaData.PutValue("is_login", "true")
-	metaData.PutValue("_req_type", "welfare.v1.GetTaskListReq")
-	metaData.PutValue("_reply_type", "welfare.v1.GetTaskListResp")
 
 	msg := ctx.NewMsg("PB_MSG", metaData, `{
-		"project": "test",
-		"user_status": {
-			"uid": "481739124807512917",
-			"is_login": ${is_login}
-		}
-	}`)
-	err := node.OnMsg(ctx, msg)
-	if err != nil {
-		t.Errorf("err=%s", err)
-	}
+		 "name": "RULEGO",
+		 "is_login": ${is_login}
+	 }`)
+	node.OnMsg(ctx, msg)
 }
